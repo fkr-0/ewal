@@ -50,6 +50,8 @@ Returns:
         (/ (+ l1 0.05) (+ l2 0.05))
       (/ (+ l2 0.05) (+ l1 0.05)))))
 
+
+
 (defun ewal-palette-check-contrast (palette)
   "Check contrast suitability for a given palette.
 

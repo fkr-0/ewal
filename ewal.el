@@ -220,7 +220,28 @@ Potential Errors:
                       (+ (* c1 alpha) (* c2 (- 1 alpha))))
                     (color-name-to-rgb color1)
                     (color-name-to-rgb color2))))
+(defun ewal-generate-shades (color &optional steps adjustment)
+  "Generate a list of lighter and darker shades for COLOR.
 
+Arguments:
+  - COLOR (string): Base color in hex format.
+  - STEPS (integer, optional): Number of shades to generate in each direction.
+    Defaults to 2.
+  - ADJUSTMENT (integer, optional): Percentage adjustment per step.
+    Defaults to 10.
+
+Returns:
+  - (alist): List of shades in the format:
+    ((:light-1 . \"#XXXXXX\") (:light-2 . \"#XXXXXX\")
+     (:dark-1 . \"#XXXXXX\") (:dark-2 . \"#XXXXXX\"))"
+  (let ((steps (or steps 2))
+        (adjustment (or adjustment 10))
+        (shades '()))
+    (dotimes (i steps)
+      (let ((amount (* adjustment (1+ i))))
+        (push (cons (intern (format ":light-%d" (1+ i))) (color-lighten-name color amount)) shades)
+        (push (cons (intern (format ":dark-%d" (1+ i))) (color-darken-name color amount)) shades)))
+    (reverse shades)))
 (provide 'ewal)
 
 ;;; ewal.el ends here

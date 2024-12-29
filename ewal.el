@@ -42,229 +42,184 @@
 ;;; Code:
 
 ;; deps
+;; (require 'term/tty-colors)
 (require 'cl-lib)
 (require 'color)
 (require 'json)
-;; (require 'term/tty-colors)
 
 (defgroup ewal nil
-  "ewal options."
+  "Customizations for ewal theme."
   :group 'faces)
 
 (defcustom ewal-json-file "~/.cache/wal/colors.json"
-  "Location of ewal theme in json format."
+  "Location of the Pywal-generated theme in JSON format."
   :type 'string
   :group 'ewal)
 
-(defcustom ewal-ansi-color-name-symbols
-  (mapcar #'intern
-          (cl-loop for (key . _value)
-                   in tty-defined-color-alist
-                   collect key))
-  "The 8 most universaly supported TTY color names.
-They will be extracted from `ewal--cache-json-file', and with the
-right escape sequences applied using:
-
-#+BEGIN_SRC shell
-${HOME}/.cache/wal/colors-tty.sh
-#+END_SRC
-
-The colors should be viewable even in the Linux console (See
-https://github.com/dylanaraps/pywal/wiki/Getting-Started#applying-the-theme-to-new-terminals
-for more details).  NOTE: Order matters."
-  :type 'list
+(defcustom ewal-built-in-palette-path "~/.emacs.d/ewal/palettes/"
+  "Base directory for built-in palettes."
+  :type 'string
   :group 'ewal)
 
-(defcustom ewal-force-tty-colors-in-daemon-p nil
-  "Whether to use TTY version of `ewal' colors in Emacs daemon.
-It's a numbers game.  Set to t if you connect to your Emacs
-server from a TTY most of the time, unless you want to run `ewal'
-every time you connect with `emacsclient'."
-  :type 'boolean
+(defcustom ewal-built-in-palette-suffix ".json"
+  "File extension for built-in palette files."
+  :type 'string
   :group 'ewal)
 
-(defcustom ewal-force-tty-colors-p nil
-  "Whether to use TTY version of `ewal' colors.
-Meant for setting TTY theme regardless of GUI support."
-  :type 'boolean
-  :group 'ewal)
-
-(defcustom ewal-dark-palette-p t
-  "Assume `ewal' theme is a dark theme.
-Relevant either when using `ewal's built-in palettes, or when
-guessing which colors to use as the special \"background\" and
-\"foreground\" `wal' colors."
+(defcustom ewal-use-built-in-always nil
+  "Always use built-in palettes instead of reading Pywal cache."
   :type 'boolean
   :group 'ewal)
 
 (defcustom ewal-built-in-palette "sexy-material"
-  "Whether to skip reading the `wal' cache and use built-in palettes.
-Only applies when `wal' cache is unreadable for some reason."
+  "Default built-in palette to use."
   :type 'string
   :group 'ewal)
 
-(defcustom ewal-use-built-in-always-p nil
-  "Whether to skip reading the `wal' cache and use built-in palettes."
-  :type 'boolean
-  :group 'ewal)
-
-(defcustom ewal-use-built-in-on-failure-p t
-  "Whether to skip reading the `wal' cache and use built-in palettes.
-Only applies when `wal' cache is unreadable for some reason."
+(defcustom ewal-dark-palette-p t
+  "Use a dark palette by default."
   :type 'boolean
   :group 'ewal)
 
 (defcustom ewal-primary-accent-color 'magenta
-  "Predominant `ewal' color.
-Must be one of `ewal-ansi-color-name-symbols'"
+  "Primary accent color. Must be one of the ANSI color names."
   :type 'symbol
   :group 'ewal)
-
-(defcustom ewal-secondary-accent-color 'blue
-  "Second most predominant `ewal' color.
-Must be one of `ewal-ansi-color-name-symbols'"
-  :type 'symbol
-  :group 'ewal)
-
-(defcustom ewal-ansi-cursor-color
-  (symbol-name ewal-primary-accent-color)
-  "Assumed color of special \"cursor\" color in `wal' themes.
-Only relevant in TTY/terminal."
-  :type 'string
-  :group 'ewal)
-
-(defvar ewal-built-in-json-file
-  (concat (file-name-directory load-file-name)
-          "palettes/"
-          (if ewal-dark-palette-p "dark/" "light/")
-          ewal-built-in-palette
-          ".json")
-  "Json file to be used in case `ewal-use-built-in-always-p' is t.
-Also if `ewal-use-built-in-on-failure-p' is t and something goes wrong.")
-
-(defvar ewal-ansi-background-color
-  (if ewal-dark-palette-p "black" "white")
-  "Ansi color to use for background in a TTY/terminal.")
-
-(defvar ewal-ansi-comment-color
-  (if ewal-dark-palette-p "black" "white")
-  "Ansi color to use for background in TTY/terminal.")
-
-(defvar ewal-ansi-foreground-color
-  (if ewal-dark-palette-p "white" "black")
-  "Ansi color to use for background in TTY/terminal.")
 
 (defvar ewal-base-palette nil
-  "Current base palette extracted from `ewal-json-file'.")
+  "Base palette extracted from Pywal JSON or built-in sources.")
 
 (defvar ewal-shade-percent-difference 5
-  "Default percentage difference between each shade.")
+  "Percentage difference between shades.")
 
 ;;;###autoload
-(defun ewal-load-colors (&optional json color-names)
-  "Read JSON as the most complete of the cached wal files.
-COLOR-NAMES will be associated with the first 8 colors of the
-cached wal colors.  COLOR-NAMES are meant to be used in
-conjunction with `ewal-ansi-color-name-symbols'.  \"Special\" wal
-colors such as \"background\", \"foreground\", and \"cursor\",
-tend to \(but do not always\) correspond to the remaining colors
-generated by wal. Add those special colors to the returned
-alist. Return nil on failure."
-  (condition-case nil
-      (let* ((json (or json ewal-json-file))
-             (json-object-type 'alist)
-             (json-array-type 'list)
-             (color-names (or color-names ewal-ansi-color-name-symbols))
-             (colors (json-read-file json))
-             (special-colors (alist-get 'special colors))
-             (regular-colors (alist-get 'colors colors))
-             (regular-color-values (cl-loop for (_key . value)
-                                            in regular-colors
-                                            collect value))
-             (cannonical-colors (cl-pairlis color-names regular-color-values)))
-        ;; unofficial comment color (always used as such)
-        (cl-pushnew (cons 'comment (nth 8 regular-color-values)) special-colors)
-        (setq ewal-base-palette (append special-colors cannonical-colors)))
-    (error nil))
+(defun ewal-load-colors (&optional json-file)
+  "Load colors from the Pywal JSON file or fallback to built-in palettes.
+
+Arguments:
+  - json-file (string or nil): Path to the Pywal JSON file. Defaults to `ewal-json-file`.
+
+Returns:
+  - (alist or nil): Alist of colors loaded from the file or built-in palette.
+
+Potential Errors:
+  - Signals an error if JSON parsing fails or the file cannot be accessed.
+  - Logs a message and uses the built-in palette on failure.
+  "
+  (let ((file (or json-file ewal-json-file)))
+    (condition-case err
+        (if (and (not ewal-use-built-in-always) (file-exists-p file))
+            (ewal--parse-json file)
+          (ewal--load-built-in-palette))
+      (error (message "[ewal] Failed to load colors: %s" err)
+             (ewal--load-built-in-palette))))
   ewal-base-palette)
 
-(defun ewal--get-base-color (color)
-  "Fetch COLOR from `ewal-base-palette'."
-  (alist-get color ewal-base-palette))
+(defun ewal--parse-json (file)
+  "Parse the Pywal JSON FILE and populate `ewal-base-palette`.
 
-;; Color helper functions, shamelessly *borrowed* from solarized
-(defun ewal--color-name-to-rgb (color)
-  "Retrieves the hex string represented the named COLOR (e.g. \"red\")."
-  (cl-loop with div = (float (car (tty-color-standard-values "#ffffff")))
-           for x in (tty-color-standard-values (downcase color))
-           collect (/ x div)))
+Arguments:
+  - file (string): Path to the JSON file.
 
-(defun ewal--color-blend (color1 color2 alpha)
-  "Blend COLOR1 and COLOR2 (hex strings) together by a coefficient ALPHA.
-\(a float between 0 and 1\)"
-  (when (and color1 color2)
-    (cond ((and color1 color2 (symbolp color1) (symbolp color2))
-           (ewal--color-blend (ewal-get-color color1 0)
-                              (ewal-get-color color2 0) alpha))
+Returns:
+  - (alist): Alist of colors extracted from the JSON file.
 
-          ((or (listp color1) (listp color2))
-           (cl-loop for x in color1
-                    when (if (listp color2) (pop color2) color2)
-                    collect (ewal--color-blend x it alpha)))
+Potential Errors:
+  - Signals an error if the file is not a valid JSON or cannot be read.
+  "
+  (let* ((json-object-type 'alist)
+         (json-array-type 'list)
+         (colors (json-read-file file)))
+    (setq ewal-base-palette
+          (append (alist-get 'special colors)
+                  (ewal--build-ansi-color-alist (alist-get 'colors colors))))))
 
-          ((and (string-prefix-p "#" color1) (string-prefix-p "#" color2))
-           (apply (lambda (r g b) (format "#%02x%02x%02x"
-                                          (* r 255) (* g 255) (* b 255)))
-                  (cl-loop for it    in (ewal--color-name-to-rgb color1)
-                           for other in (ewal--color-name-to-rgb color2)
-                           collect (+ (* alpha it) (* other (- 1 alpha))))))
+(defun ewal--build-ansi-color-alist (colors)
+  "Build an alist of ANSI color names and their values from COLORS.
 
-          (t color1))))
+Arguments:
+  - colors (alist): List of color pairs (name . value).
 
-(defun ewal--color-chshade (color alpha)
-  "Change shade of COLOR \(a hexidecimal string\) by ALPHA.
-\(a float between -1 and 1\)."
-  (cond ((and color (symbolp color))
-         (ewal--color-chshade (ewal--get-base-color color) alpha))
-        ((listp color)
-         (cl-loop for c in color collect (ewal--color-chshade c alpha)))
-        (t
-         (if (> alpha 0)
-             (ewal--color-blend "#FFFFFF" color alpha)
-           (ewal--color-blend "#000000" color (* -1 alpha))))))
+Returns:
+  - (alist): Alist mapping ANSI color names to their values.
+  "
+  (cl-loop for (name . value) in colors
+           collect (cons (intern name) value)))
 
-(defun ewal-get-color
-    (color &optional shade shade-percent-difference)
-  "Get an `ewal' color.
-Return SHADE of COLOR with SHADE-PERCENT-DIFFERENCE between
-shades."
-  (let ((tty (or ewal-force-tty-colors-p
-                 (and (daemonp) ewal-force-tty-colors-in-daemon-p)
-                 (and (not (daemonp)) (not (display-graphic-p)))))
-        (shade (or shade 0))
-        (shade-percent-difference
-         (or shade-percent-difference
-             ewal-shade-percent-difference)))
-    (if tty
-        (let ((color-name (symbol-name color)))
-          (concat (if (or (string= color-name "comment") (> shade 0)) "bright" "")
-                  (cond ((string= color-name "background") ewal-ansi-background-color)
-                        ((string= color-name "foreground") ewal-ansi-foreground-color)
-                        ((string= color-name "comment") ewal-ansi-comment-color)
-                        ((string= color-name "cursor") ewal-ansi-cursor-color)
-                        (t color-name))))
-      (if (or (not shade) (= shade 0))
-          (ewal--get-base-color color)
-        (ewal--color-chshade
-         color (/ (* shade shade-percent-difference) (float 100)))))))
+(defun ewal--load-built-in-palette ()
+  "Load the built-in palette based on `ewal-built-in-palette`.
 
-;;;###autoload
-(defun ewal-load-color (color &optional shade shade-percent-difference)
-  "Same as `ewal-get-color' but call `ewal-load-ewal-colors' first.
-Pass COLOR, SHADE, and SHADE-PERCENT-DIFFERENCE to
-`ewal-get-color'.  Meant to be called from user config."
-  (ewal-load-colors)
-  (ewal-get-color color shade shade-percent-difference))
+Returns:
+  - (alist or nil): Alist of colors if the palette file is found and valid, otherwise nil.
+
+Potential Errors:
+  - Logs a message if the built-in palette file does not exist.
+  "
+  (let ((file (concat ewal-built-in-palette-path
+                      (if ewal-dark-palette-p "dark/" "light/")
+                      ewal-built-in-palette
+                      ewal-built-in-palette-suffix)))
+    (if (file-exists-p file)
+        (ewal--parse-json file)
+      (message "[ewal] Built-in palette not found: %s" file)
+      nil)))
+
+(defun ewal-get-color (color &optional shade)
+  "Retrieve COLOR from `ewal-base-palette`, optionally adjusting SHADE.
+
+Arguments:
+  - color (symbol): Color name to retrieve.
+  - shade (float or nil): Adjustment value for shade (positive for lighter, negative for darker).
+
+Returns:
+  - (string): Hexadecimal color string.
+
+Potential Errors:
+  - Returns nil if the color is not found in `ewal-base-palette`.
+  "
+  (let ((base-color (alist-get color ewal-base-palette)))
+    (if shade
+        (ewal--adjust-shade base-color shade)
+      base-color)))
+
+(defun ewal--adjust-shade (color shade)
+  "Adjust the SHADE of COLOR (a hexadecimal string).
+
+Arguments:
+  - color (string): Hexadecimal color string.
+  - shade (float): Adjustment value for shade (positive for lighter, negative for darker).
+
+Returns:
+  - (string): Adjusted hexadecimal color string.
+
+Potential Errors:
+  - Returns the input color if it is not a valid hexadecimal string.
+  "
+  (if (and color (string-prefix-p "#" color))
+      (apply #'color-rgb-to-hex
+             (cl-loop for component in (color-name-to-rgb color)
+                      collect (min 1.0 (max 0.0 (+ component shade)))))
+    color))
+
+(defun ewal-blend-colors (color1 color2 alpha)
+  "Blend COLOR1 and COLOR2 by ALPHA (a value between 0 and 1).
+
+Arguments:
+  - color1 (string): First hexadecimal color string.
+  - color2 (string): Second hexadecimal color string.
+  - alpha (float): Blending ratio, where 0 uses only COLOR2 and 1 uses only COLOR1.
+
+Returns:
+  - (string): Blended hexadecimal color string.
+
+Potential Errors:
+  - Signals an error if either color is not a valid hexadecimal string.
+  "
+  (apply #'color-rgb-to-hex
+         (cl-mapcar (lambda (c1 c2)
+                      (+ (* c1 alpha) (* c2 (- 1 alpha))))
+                    (color-name-to-rgb color1)
+                    (color-name-to-rgb color2))))
 
 (provide 'ewal)
 

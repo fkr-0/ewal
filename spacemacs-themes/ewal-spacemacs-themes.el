@@ -31,19 +31,17 @@
 ;; this file if you want to contribute other `ewal' customized themes.
 
 ;;; Code:
-(require 'ewal)
+;;; ewal-spacemacs-themes.el --- Refactored ewal-spacemacs-themes -*- lexical-binding: t; -*-
+
+(require 'ewal-palette-utils)
+(require 'color)
 
 (defvar ewal-spacemacs-themes-colors nil
-  "`spacemacs-theme' compatible colors.
-Extracted from current `ewal' theme.")
+  "`spacemacs-theme' compatible colors extracted from the current `ewal' theme.")
 
 (defun ewal-spacemacs-themes--generate-colors (&optional borders)
-  "Make theme colorscheme from theme palettes. If BORDERS is t
-use `ewal-primary-accent-color' for borders."
-  (let ((tty (or ewal-force-tty-colors-p
-                 (and (daemonp) ewal-force-tty-colors-in-daemon-p)
-                 (and (not (daemonp)) (not (display-graphic-p)))))
-        (bg1 (ewal-get-color 'background 0))
+  "Generate theme colorscheme from palette. If BORDERS is non-nil, use `ewal-primary-accent-color` for borders."
+  (let ((bg1 (ewal-get-color 'background 0))
         (bg2 (ewal-get-color 'background -2))
         (bg3 (ewal-get-color 'background -3))
         (bg4 (ewal-get-color 'background -4))
@@ -52,123 +50,87 @@ use `ewal-primary-accent-color' for borders."
         (base (ewal-get-color 'foreground 0))
         (base-dim (ewal-get-color 'foreground -4))
         (comment (ewal-get-color 'comment 0))
-        (border (ewal-get-color (if borders
-                                     ewal-primary-accent-color
-                                   'background) 0))
-        (cblk (ewal-get-color 'background -3))
-        (const (ewal-get-color ewal-primary-accent-color 4))
-        (cblk-ln-bg (ewal-get-color ewal-primary-accent-color -4))
-        (cursor (ewal-get-color 'cursor 0))
-        (comp (ewal-get-color ewal-secondary-accent-color 0))
-        (red  (ewal-get-color 'red 0))
+        (border (ewal-get-color (if borders ewal-primary-accent-color 'background) 0))
         (highlight (ewal-get-color 'background 4))
-        (highlight-dim (ewal-get-color 'background 2))
+        (red (ewal-get-color 'red 0))
+        (green (ewal-get-color 'green 0))
         (cyan (ewal-get-color 'cyan 0))
         (yellow (ewal-get-color 'yellow 0))
-        (green (ewal-get-color 'green 0))
-        (suc (ewal-get-color 'green 4))
-        (type (ewal-get-color 'red 2))
-        (var (ewal-get-color ewal-secondary-accent-color 4))
-        (aqua-bg (ewal-get-color 'cyan -3))
-        (green-bg (ewal-get-color 'green -3))
-        (green-bg-s  (ewal-get-color 'green -4))
-        (red-bg (ewal-get-color 'red -3))
-        (red-bg-s (ewal-get-color 'red -4))
         (blue (ewal-get-color 'blue 0))
-        (blue-bg (ewal-get-color 'blue -3))
-        (blue-bg-s (ewal-get-color 'blue -4))
-        (magenta (ewal-get-color 'magenta 0))
-        (yellow-bg (ewal-get-color 'yellow -3)))
-    `((act1          . ,act1)
-      (act2          . ,act2)
-      (base          . ,base)
-      (base-dim      . ,base-dim)
-      (bg1           . ,bg1)
-      ;; used to highlight current line
-      (bg2           . ,(if tty comment bg2))
-      (bg3           . ,bg3)
-      (bg4           . ,bg4)
-      (border        . ,border)
-      (cblk          . ,base)
-      (cblk-bg       . ,cblk)
-      (cblk-ln       . ,const)
-      (cblk-ln-bg    . ,cblk-ln-bg)
-      (cursor        . ,cursor)
-      (const         . ,const)
-      (comment       . ,comment)
-      (comment-bg    . ,bg1)
-      (comp          . ,comp)
-      (err           . ,red)
-      (func          . ,act2)
-      (head1         . ,act2)
-      (head1-bg      . ,act1)
-      (head2         . ,comp)
-      (head2-bg      . ,bg3)
-      (head3         . ,cyan)
-      (head3-bg      . ,bg3)
-      (head4         . ,yellow)
-      (head4-bg      . ,bg3)
-      (highlight     . ,highlight)
-      (highlight-dim . ,highlight-dim)
-      (keyword       . ,comp)
-      (lnum          . ,comment)
-      (mat           . ,green)
-      (meta          . ,yellow)
-      (str           . ,cyan)
-      (suc           . ,suc)
-      (ttip          . ,comment)
-      (ttip-sl       . ,bg2)
-      (ttip-bg       . ,bg1)
-      (type          . ,type)
-      (var           . ,var)
-      (war           . ,yellow)
-      ;; colors
-      (aqua          . ,cyan)
-      (aqua-bg       . ,aqua-bg)
-      (green         . ,green)
-      (green-bg      . ,green-bg)
-      (green-bg-s    . ,green-bg-s)
-      ;; the same as `aqua' in web development
-      (cyan          . ,cyan)
-      (red           . ,red)
-      (red-bg        . ,red-bg)
-      (red-bg-s      . ,red-bg-s)
-      (blue          . ,blue)
-      (blue-bg       . ,blue-bg)
-      (blue-bg-s     . ,blue-bg-s)
-      (magenta       . ,magenta)
-      (yellow        . ,yellow)
-      (yellow-bg     . ,yellow-bg))))
+        (magenta (ewal-get-color 'magenta 0)))
+    `((bg1 . ,bg1)
+      (bg2 . ,bg2)
+      (bg3 . ,bg3)
+      (bg4 . ,bg4)
+      (act1 . ,act1)
+      (act2 . ,act2)
+      (base . ,base)
+      (base-dim . ,base-dim)
+      (comment . ,comment)
+      (border . ,border)
+      (highlight . ,highlight)
+      (red . ,red)
+      (green . ,green)
+      (cyan . ,cyan)
+      (yellow . ,yellow)
+      (blue . ,blue)
+      (magenta . ,magenta))))
 
 ;;;###autoload
-(cl-defun ewal-spacemacs-themes-get-colors
-    (&optional borders)
-  "Get `spacemacs-theme' colors.
-For usage see: <https://github.com/nashamri/spacemacs-theme>."
+(cl-defun ewal-spacemacs-themes-get-colors (&optional borders)
+  "Get colors for `spacemacs-theme'.
+If BORDERS is non-nil, includes border settings."
   (ewal-load-colors)
   (setq ewal-spacemacs-themes-colors
         (ewal-spacemacs-themes--generate-colors borders))
   ewal-spacemacs-themes-colors)
 
-(defun ewal-spacemacs-themes--modernize-theme (theme)
-  "Modernize an ewal-spacemacs-themes THEME."
+(defun ewal-spacemacs-themes-check-contrast ()
+  "Check contrast for all defined colors in `ewal-spacemacs-themes-colors'.
+Returns a list of problematic colors with contrast issues."
+  (let ((warnings '()))
+    (dolist (entry ewal-spacemacs-themes-colors)
+      (let* ((name (car entry))
+             (color (cdr entry))
+             (contrast (ewal-theme-contrast-ratio color (alist-get 'bg1 ewal-spacemacs-themes-colors))))
+        (when (< contrast 4.5)
+          (push (list name color contrast) warnings))))
+    warnings))
+
+(defun ewal-spacemacs-themes-fix-contrast ()
+  "Interactively fix contrast issues for `ewal-spacemacs-themes-colors'."
+  (let ((warnings (ewal-spacemacs-themes-check-contrast)))
+    (if (not warnings)
+        (message "All colors have acceptable contrast!")
+      (dolist (warning warnings)
+        (let ((name (nth 0 warning))
+              (color (nth 1 warning))
+              (contrast (nth 2 warning)))
+          (when (yes-or-no-p (format "Fix color '%s' with contrast %.2f? " name contrast))
+            (let ((new-color (if (< contrast 4.5)
+                                 (color-darken-name color 10)
+                               (color-lighten-name color 10))))
+              (setf (alist-get name ewal-spacemacs-themes-colors) new-color)
+              (message "Adjusted '%s' to '%s'" name new-color))))))))
+
+(defun ewal-spacemacs-themes-modernize-theme (theme)
+  "Modernize a spacemacs theme by applying the `ewal-spacemacs-themes-colors`.
+Arguments:
+  - THEME (symbol): The name of the theme to modernize."
   (let ((class '((class color) (min-colors 89))))
     (custom-theme-set-faces
      theme
-       `(line-number
-         ((,class
-           (:foreground ,(ewal-get-color 'comment 0)
-            :background ,(ewal-get-color 'background 0))))
-       `(page-break-lines
-         ((,class
-           (:foreground ,(ewal-get-color 'background -3)
-            :background ,(ewal-get-color 'background -3)))))))))
-
-;;;###autoload
-(when load-file-name
-  (add-to-list 'custom-theme-load-path
-               (file-name-as-directory (file-name-directory load-file-name))))
+     `(default ((,class (:background ,(alist-get 'bg1 ewal-spacemacs-themes-colors)
+                         :foreground ,(alist-get 'base ewal-spacemacs-themes-colors)))))
+     `(cursor ((,class (:background ,(alist-get 'highlight ewal-spacemacs-themes-colors)))))
+     `(line-number ((,class (:foreground ,(alist-get 'comment ewal-spacemacs-themes-colors)
+                             :background ,(alist-get 'bg2 ewal-spacemacs-themes-colors)))))
+     `(region ((,class (:background ,(alist-get 'bg3 ewal-spacemacs-themes-colors))))))))
+(defun ewal-spacemacs-themes-reload ()
+  "Reload the Spacemacs theme with the current `ewal` palette."
+  (interactive)
+  (ewal-spacemacs-themes-get-colors)
+  (ewal-spacemacs-themes-modernize-theme 'spacemacs))
 
 (provide 'ewal-spacemacs-themes)
-
 ;;; ewal-spacemacs-themes.el ends here

@@ -43,9 +43,15 @@
 
 ;; deps
 ;; (require 'term/tty-colors)
+(add-to-list 'load-path (expand-file-name "ewal" user-emacs-directory))
 (require 'cl-lib)
 (require 'color)
 (require 'json)
+
+(require 'ewal-theme-contrast-check)
+(require 'ewal-palette-utils)
+(require 'uncustomized-faces)
+(require 'ewal-uncustomized-faces)
 
 (defgroup ewal nil
   "Customizations for ewal theme."

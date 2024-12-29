@@ -76,11 +76,11 @@ Arguments:
 
 ;;; Example usage:
 ;; Process uncustomized faces for lsp-mode using a given palette and theme
-(ewal-process-uncustomized-faces
- "lsp-mode"
- '(lsp-ui-doc-header lsp-ui-doc-background)
- (ewal-load-palette "/path/to/palette.json")
- "/path/to/theme.el")
+;; (ewal-process-uncustomized-faces
+;;  "lsp-mode"
+;;  '(lsp-ui-doc-header lsp-ui-doc-background)
+;;  (ewal-load-palette "/path/to/palette.json")
+;;  "/path/to/theme.el")
 
 (provide 'ewal-uncustomized-faces)
 ;;; ewal-uncustomized-faces.el ends here

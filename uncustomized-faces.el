@@ -61,8 +61,8 @@ Arguments:
 (message "Uncustomized faces: %s"
          (find-uncustomized-faces "lsp-mode" '(lsp-ui-doc-header lsp-ui-doc-background)))
 
-;; Insert uncustomized faces into a theme file
-(insert-uncustomized-faces "lsp-mode" '(lsp-ui-doc-header lsp-ui-doc-background) "/path/to/your-theme.el")
+;; ;; Insert uncustomized faces into a theme file
+;; (insert-uncustomized-faces "lsp-mode" '(lsp-ui-doc-header lsp-ui-doc-background) "/path/to/your-theme.el")
 
 (provide 'uncustomized-faces)
 ;;; uncustomized-faces.el ends here

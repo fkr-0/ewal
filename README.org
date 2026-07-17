@@ -2,108 +2,192 @@
 
 [[./img/ewal.png]]
 
-A dependency-free, pywal-based, automatic, terminal-aware Emacs
-color-picker and theme generator.
+=ewal= is a pywal-compatible, terminal-aware color and theme toolkit for Emacs.
+It can read =~/.cache/wal/colors.json= or use one of the bundled palettes, and
+provides adaptors for Doom themes, Spacemacs themes, Evil cursors, and
+mode-lines.
 
-* Updates
-- =ewal-doom-themes= have been added!
-- =ewal-wal-json-file= has been renamed to =ewal-json-file=.
-- =ewal-load-wal-colors= has been renamed to =ewal-load-colors=.
-- =ewal-get-color= has been renamed to
-  =ewal-load-color=. =ewal--get-color= has now been exposed as
-  =ewal-get-color=. Both functions do the same thing, except that
-  =ewal-load-color= will always call =ewal-load-colors= first, while
-  =ewal-get-color= expects the user to do so first, for a marginal
-  performance improvement.
-- =ewal-spacemacs-theme-*-high-contrast= have been deprecated. To
-  achieve the same effect =(setq ewal-shade-percent-difference 10)=
+The core package uses only Emacs libraries.  Doom, Spacemacs, Evil, and
+Transient are dependencies of their respective optional integrations rather
+than of palette loading itself.
 
-* TODOs
-- Add =ewal-doom-themes= screenshots.
+* Highlights
 
-* Overview
-A theme isn't just a colorscheme. =ewal= lives by that. It uses [[https://github.com/dylanaraps/pywal][pywal]]
-as a backend to spruce up your Emacs setup by default, but also sports
-over 200 built in palettes to do so if you don't use the program (or
-*shudders*, you use a DOS system).
-
-It adds extra shades to =pywal= palettes and makes your Emacs look
-sexy in a GUI and in a terminal (=pywal= users
-only). =ewal-spacemacs-themes= shows what ewal can do in 400 flavors
-of =spacemacs-theme= and =doom-themes=, while =ewal-evil-cursors=
-spices up, well, your evil cursors. It also provides a function to
-colorize =spaceline= accordingly. All these packages (with the
-excepton of doom themes) are available on MELPA.
-
-* Screenshots
-** GUI
-[[./img/ewal.gif]]
-** Terminal
-[[./img/ewal-terminal.png]]
+- More than 200 bundled dark and light palettes.
+- Display-independent hexadecimal color parsing suitable for batch Emacs and CI.
+- WCAG relative-luminance and contrast calculations.
+- Contrast-safe semantic roles for =foreground=, =cursor=, =comment=, and
+  =highlight=.
+- Doom and Spacemacs adaptors that repair low-contrast colors before themes are
+  constructed.
+- Evil cursor and mode-line colors that remain distinct from the editor
+  background.
+- Batch-friendly palette auditing and optional Transient interfaces.
 
 * Usage
-These are the fundamentals. For more detail, see the docstrings.
 
-Get a color and a specific shade (+ for ligther, - for darker):
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (ewal-load-color 'magenta +4)
-#+END_SRC
+** Read colors
 
-Use built-in palettes if your =pywal= theme fails to load (otherwise
-you just get a black-and-white theme and something about color being
-nil):
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (setq ewal-use-built-in-on-failure-p t)
-#+END_SRC
+#+begin_src emacs-lisp
+(require 'ewal)
 
-Always use built-in palettes:
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (setq ewal-use-built-in-always-p t)
-#+END_SRC
+;; Load pywal's JSON when it exists, otherwise use the configured bundled
+;; palette.  Calling this explicitly is optional; `ewal-get-color' loads lazily.
+(ewal-load-colors)
 
-Pick a built-in palette:
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (setq ewal-built-in-palette "sexy-material")
-#+END_SRC
+;; Positive shades lighten; negative shades darken.
+(ewal-get-color 'magenta 4)
+(ewal-get-color 'background -2)
+#+end_src
 
-Set custom folder and custom filename for =pywal= scheme (if you use
-=wpgtk= or keep your own palette somewhere on your system):
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (setq ewal-json-file "~/path/to/cache-file")
-#+END_SRC
+** Use bundled palettes
 
-Use special cursor for insert state when evil insert bindings are disabled:
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (setq ewal-evil-cursors-obey-evil-p t)
-#+END_SRC
+#+begin_src emacs-lisp
+(setq ewal-use-built-in-always t
+      ewal-dark-palette-p t
+      ewal-built-in-palette "sexy-material")
 
-My config with all its warts:
-#+BEGIN_SRC emacs-lisp :tangle yes
-  (use-package ewal
-    :init (setq ewal-use-built-in-always-p nil
-                ewal-use-built-in-on-failure-p t
-                ewal-built-in-palette "sexy-material"))
-  (use-package ewal-spacemacs-themes
-    :init (progn
-            (setq spacemacs-theme-underline-parens t
-                  my:rice:font (font-spec
-                                :family "Source Code Pro"
-                                :weight 'semi-bold
-                                :size 11.0))
-            (show-paren-mode +1)
-            (global-hl-line-mode)
-            (set-frame-font my:rice:font nil t)
-            (add-to-list  'default-frame-alist
-                          `(font . ,(font-xlfd-name my:rice:font))))
-    :config (progn
-              (load-theme 'ewal-spacemacs-modern t)
-              (enable-theme 'ewal-spacemacs-modern)))
-  (use-package ewal-evil-cursors
-    :after (ewal-spacemacs-themes)
-    :config (ewal-evil-cursors-get-colors
-             :apply t :spaceline t))
-  (use-package spaceline
-    :after (ewal-evil-cursors winum)
-    :init (setq powerline-default-separator nil)
-    :config (spaceline-spacemacs-theme))
-#+END_SRC
+;; Reload after changing palette settings.
+(ewal-load-colors nil t)
+#+end_src
+
+The default bundled-palette path is resolved relative to the installed =ewal=
+library.  It no longer assumes =~/.emacs.d/ewal/palettes/=.  To use a custom
+palette tree:
+
+#+begin_src emacs-lisp
+(setq ewal-built-in-palette-path "~/path/to/palettes/")
+#+end_src
+
+To use a nonstandard pywal-compatible JSON file:
+
+#+begin_src emacs-lisp
+(setq ewal-json-file "~/path/to/colors.json")
+(ewal-load-colors nil t)
+#+end_src
+
+** Contrast policy
+
+The palette loader derives missing semantic roles and guarantees that they are
+not equal to the base background.  The defaults are:
+
+- ordinary text: =4.5:1=
+- cursors, comments, highlights, and UI boundaries: =3.0:1=
+
+These thresholds can be customized through
+=ewal-color-minimum-text-contrast= and =ewal-color-minimum-ui-contrast=.
+
+Contrast is calculated using the WCAG sRGB linearization formula.  Hexadecimal
+colors are parsed directly, so batch Emacs does not depend on the active
+terminal's color table.
+
+** Doom themes
+
+#+begin_src emacs-lisp
+(require 'ewal-doom-themes)
+(require 'ewal-generate-doom-theme)
+
+(setq ewal-doom-themes-min-contrast 4.5
+      ewal-doom-themes-min-ui-contrast 3.0
+      ewal-doom-themes-preview-limit 8)
+
+;; Generate a theme from a palette JSON file.
+(ewal-generate-doom-theme-interactive)
+
+;; Audit the active Doom theme.
+(ewal-doom-themes-check-contrast)
+#+end_src
+
+The Doom adaptor enforces contrast while resolving semantic colors, and the
+generator normalizes supplied palettes before producing face definitions.  A
+palette that assigns the same color to foreground and background is repaired
+rather than emitted unchanged.
+
+** Spacemacs themes
+
+#+begin_src emacs-lisp
+(require 'ewal-spacemacs-themes)
+
+(setq ewal-spacemacs-themes-min-contrast 4.5
+      ewal-spacemacs-themes-min-ui-contrast 3.0)
+
+(load-theme 'ewal-spacemacs-modern t)
+#+end_src
+
+The Spacemacs adaptor checks text and UI roles separately.  Background roles
+are not incorrectly audited against themselves.
+
+** Evil cursors and mode-lines
+
+#+begin_src emacs-lisp
+(require 'ewal-evil-cursors)
+
+(setq ewal-evil-cursors-obey-evil-p t)
+(ewal-evil-cursors-get-colors :apply t)
+
+;; Include Spacemacs cursor integration when available.
+(ewal-evil-cursors-get-colors :apply t :spacemacs t)
+#+end_src
+
+Cursor backgrounds are checked against the editor background, and text-bearing
+mode-line faces receive a foreground that meets the text contrast threshold.
+
+** Audit palettes
+
+Interactive report:
+
+#+begin_src emacs-lisp
+(require 'ewal-palette-utils)
+(ewal-audit-palettes-contrast "~/path/to/palettes" 4.5)
+#+end_src
+
+Pure batch report:
+
+#+begin_src sh
+emacs --batch -Q -L /path/to/ewal \
+  --eval "(progn (require 'ewal-palette-utils) \
+          (ewal-audit-palettes-contrast-batch \"/path/to/palettes\" 4.5))"
+#+end_src
+
+Optional Transient front ends are loaded only when requested:
+
+#+begin_src emacs-lisp
+(ewal-palettes-transient)
+(ewal-check-contrast-panel)
+#+end_src
+
+* Development with Eldev
+
+The repository includes an =Eldev= project configuration.  It installs Doom,
+Spacemacs, Transient, and lint dependencies into an isolated development
+environment and keeps them separate from the user's Doom package tree.
+
+#+begin_src sh
+eldev test
+eldev compile --warnings-as-errors
+eldev lint
+#+end_src
+
+The test suite covers WCAG reference values, headless hexadecimal parsing,
+semantic role repair, Doom and Spacemacs adaptor thresholds, Evil cursor
+contrast, and every bundled JSON palette.
+
+This repository contains several MELPA package boundaries in one tree.  A
+single repository-wide =package-lint= invocation therefore misidentifies
+subpackage headers and dependencies relative to =ewal.el=.  The default Eldev
+lint command runs Checkdoc and Relint; run =package-lint= separately for each
+release package or from a CI matrix whose main file is the corresponding
+package entrypoint.
+
+Declarative Doom and Spacemacs theme entrypoints use =no-byte-compile: t=, as
+theme macros produce source forms that are not useful or reliable as ordinary
+byte-compiled libraries.  Reusable helper and adaptor libraries are compiled
+with warnings treated as errors.
+
+* Screenshots
+
+** GUI
+[[./img/ewal.gif]]
+
+** Terminal
+[[./img/ewal-terminal.png]]

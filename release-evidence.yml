@@ -1,170 +1,190 @@
 schema_version: 1
-generated_at: "2026-08-03T22:56:34+02:00"
+generated_at: "2026-08-04T01:13:40+02:00"
+last_verified_at: "2026-08-04T01:17:29+02:00"
 release:
   project: ewal
-  version: 0.3.1
-  tag: v0.3.1
+  version: 0.3.2
+  tag: v0.3.2
   tag_policy: annotated
   branch: master
   release_unit: repository
   canonical_version_file: VERSION
-  source_head_before_release_commit: 4dd36f12033e52b48265f8e4cb36b4e99a922dbe
-  base_tag: v0.3.0
-  base_tag_commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
-  compatibility_fix_commit: 4dd36f12033e52b48265f8e4cb36b4e99a922dbe
+  source_head_before_release_commit: fdd6de09b00d222ba929aa7e746e86592a35b1d8
+  base_tag: v0.3.1
+  base_tag_commit: fdd6de09b00d222ba929aa7e746e86592a35b1d8
   target: release commit containing this evidence file
-  state_during_generation: pending_release_commit_and_tag
-  expected_final_state: committed_tagged_and_pushed
+  state_during_generation: pending_commit_tag_push_and_hosted_ci
+  expected_final_state: committed_tagged_pushed_ci_verified_and_release_asset_published
 
 version_contract:
-  repository_version: 0.3.1
-  core_package_version: 0.3.1
-  doom_adaptor_version: 0.3.1
-  spacemacs_adaptor_version: 0.3.1
+  repository_version: 0.3.2
+  core_package_version: 0.3.2
+  doom_adaptor_version: 0.3.2
+  spacemacs_adaptor_version: 0.3.2
   evil_cursors_package_version: 1.1.0
   adaptor_core_dependency_floor: 0.3.0
   tag_format: vMAJOR.MINOR.PATCH
   changelog_policy: Keep a Changelog
   semantic_versioning: true
 
-reason_for_patch_release:
-  initial_release: v0.3.0
-  initial_release_commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
-  findings:
-    - Emacs 27.2 could not resolve the current Transient development dependency, which requires Emacs 28.1.
-    - Emacs 29.4 warnings-as-errors compilation rejected direct calls to Transient prefix commands marked for interactive use only.
-    - Generated autoload loading could encounter Transient prefix expansion before Transient was loaded.
-    - actions/checkout@v4 emitted a hosted Node.js 20 deprecation warning.
-  disposition:
-    - Move the full optional-integration matrix floor to Emacs 28.1 while retaining the documented Emacs 25.1 core target.
-    - Keep Transient prefix macros behind autoloaded wrapper functions.
-    - Dispatch prefix commands with call-interactively and declare optional functions explicitly.
-    - Upgrade checkout to actions/checkout@v5.
-    - Restrict push CI to master to avoid duplicate branch and tag runs.
+scope:
+  release_type: patch
+  rationale: >-
+    The work hardens existing palette loading, package metadata, CI, and
+    distributable artifacts without adding a new provider API or breaking
+    public behavior.
+  delivered:
+    - validate external pywal-compatible cache structure before activation
+    - retry reads when cache files are rewritten or replaced mid-read
+    - detect timestamp-preserving replacements through extended file identity
+    - fall back to bundled palettes for malformed or incomplete external input
+    - lint every published package boundary independently
+    - pin GitHub Actions to immutable revisions
+    - package and smoke-test bundled palette resources
 
-workspace_review:
-  original_remote: upstream
-  original_remote_url: https://github.com/cyruseuros/ewal
-  origin_url: https://github.com/fkr-0/ewal
-  github_repository:
-    full_name: fkr-0/ewal
-    public: true
-    fork: true
-    parent: cyruseuros/ewal
-  initial_untracked_dispositions:
-    Eldev: absorbed as canonical development configuration
-    bridge.yml: absorbed and expanded into the local quality gate
-    cc.el: removed as an obsolete subset of ewal-theme-contrast-check.el
-    update-1.el: removed as a superseded Spacemacs adaptor draft
-    update-2.el: removed as a superseded Spacemacs adaptor draft
-  generated_file_disposition:
-    ewal-autoloads.el: removed from version control and ignored
-  preserved_compatibility:
-    - traditional pywal cache remains the primary default
-    - colrz cache is supported as the first fallback
-    - original upstream remote is retained
-    - ewal-evil-cursors keeps its independent package version history
+cache_contract:
+  required_sections:
+    - special
+    - colors
+  required_roles:
+    - background
+    - foreground
+  required_ansi_entries: 1
+  optional_roles:
+    - cursor
+  default_read_retries: 2
+  source_signature_fields:
+    - modification_time
+    - status_change_time
+    - size
+    - inode
+    - device
+  failure_behavior: log the external error and load the configured built-in palette
 
 repository_inventory:
+  tracked_files_before_release_commit: 295
   bundled_palette_json_files: 256
   ert_test_files: 8
-  optional_integrations:
-    - Doom themes
-    - Spacemacs themes
-    - Evil cursors and mode-lines
-    - Transient palette and contrast panels
+  published_package_entrypoints:
+    - ewal.el
+    - doom-themes/ewal-doom-themes.el
+    - spacemacs-themes/ewal-spacemacs-themes.el
+    - evil-cursors/ewal-evil-cursors.el
 
 verification_environment:
-  local_os: Arch Linux
-  local_emacs: GNU Emacs 30.2
+  os: Arch Linux
+  emacs: GNU Emacs 30.2
   eldev: 1.11.1
   git: 2.55.0
   gh: 2.53.0
 
 verification:
+  baseline_release:
+    version: 0.3.1
+    commit: fdd6de09b00d222ba929aa7e746e86592a35b1d8
+    hosted_ci_run: 30852559070
+    hosted_ci_result: success
+    hosted_ci_url: https://github.com/fkr-0/ewal/actions/runs/30852559070
   local_release_gate:
-    command: eldev test && eldev compile --warnings-as-errors && eldev lint
+    command: >-
+      eldev test && eldev compile --warnings-as-errors && eldev lint &&
+      eldev exec --dont-require --file scripts/package-lint.el &&
+      sh scripts/package-smoke.sh
     bridge_command: check
     result: passed
-    completed_at: "2026-08-03T22:56:21+02:00"
-    duration_ms: 3272
-    tests: 38
+    duration_ms: 4259
+    tests: 44
     unexpected_tests: 0
     compile_warnings: 0
     checkdoc_warnings: 0
     relint_warnings: 0
+    package_lint_errors: 0
+    package_smoke_result: passed
+  regression_coverage:
+    - minimal structurally valid partial palette
+    - malformed JSON fallback
+    - incomplete palette fallback
+    - cache replacement during read
+    - atomic replacement with preserved modification time
+    - immutable GitHub Action revisions
+    - release and adaptor version consistency
   structural_checks:
     - command: git diff --check
-      expected: pass
-    - command: parse bridge.yml, CI, and release evidence as YAML
-      expected: pass
+      result: passed
+    - command: parse bridge.yml and .github/workflows/ci.yml as YAML
+      result: passed
     - command: parse README.org with org-element
-      expected: pass
-    - command: reject stale future obsolete-version markers
-      expected: pass
-    - command: reject unintended local absolute paths and credential-like additions
-      expected: pass
+      result: passed
+    - command: run sh -n and ShellCheck on scripts/package-smoke.sh
+      result: passed
+    - command: scan additions for credentials and unintended absolute paths
+      result: passed
 
-hosted_ci:
-  initial_v0_3_0_runs:
-    - run_id: 30851833069
-      ref: master
-      commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
-      conclusion: failure
-      relevant_failures:
-        - job: Emacs 27.2
-          step: Run tests
-          reason: current Transient requires Emacs 28.1
-        - job: Emacs 29.4
-          step: Compile with warnings as errors
-          reason: direct noninteractive call to an interactive-only Transient prefix
-    - run_id: 30851831461
-      ref: v0.3.0
-      commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
-      conclusion: failure
-      note: duplicate tag-push run using the same initial workflow
-  verified_compatibility_run:
-    run_id: 30852220550
-    commit: 4dd36f12033e52b48265f8e4cb36b4e99a922dbe
-    conclusion: success
-    url: https://github.com/fkr-0/ewal/actions/runs/30852220550
-    jobs:
-      - emacs: "28.1"
-        job_id: 91814695943
-        conclusion: success
-      - emacs: "29.4"
-        job_id: 91814696028
-        conclusion: success
-      - emacs: "30.2"
-        job_id: 91814695998
-        conclusion: success
-    required_steps:
-      - tests
-      - compile with warnings as errors
-      - Checkdoc and Relint
+ci:
+  workflow: .github/workflows/ci.yml
+  matrix:
+    - "28.1"
+    - "29.4"
+    - "30.2"
+  immutable_actions:
+    actions_checkout:
+      revision: fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      documented_version: v5
+    purcell_setup_emacs:
+      revision: bdc64dc730ae1fcba200bfd52cb1b4cf6159cbe5
+      documented_version: v8.0
+  required_steps:
+    - ERT tests through Eldev
+    - byte compilation with warnings as errors
+    - Checkdoc and Relint
+    - per-package package-lint
+    - extracted package artifact smoke test
+  hosted_result_during_generation: pending_release_commit
 
-artifacts:
-  produced: []
-  note: This is a source-only Emacs Lisp release; no binary artifact is required.
+package_artifact:
+  source_path_during_generation: /tmp/ewal-release-v0.3.2/ewal-0.3.2.tar
+  published_name: ewal-0.3.2.tar
+  size_bytes: 491520
+  sha256: 400f893133d55924e3df7a3c3eaf37d6cf865f3f4d4eeefb7fa1d9adbf18a6d3
+  tar_entries: 278
+  palette_entries: 256
+  includes:
+    - palettes
+    - README.org
+    - LICENSE
+    - CHANGELOG.md
+  smoke_test:
+    extracted_load: passed
+    loaded_version: 0.3.2
+    foreground: "#eceff1"
+  publication_state_during_generation: pending_github_release_asset
 
 independent_review:
   backend: OpenCode
+  task_id: 3f3716ab-8739-46a4-ba99-e058cbd9e566
   result: unavailable
   reason: review task exceeded the 120000 ms backend limit and returned no findings
   treated_as_release_evidence: false
 
 known_limitations:
-  - The declared Emacs 25.1 core minimum is not yet exercised separately from optional modern dependencies.
-  - Package-lint remains package-boundary specific and is tracked in ROADMAP.md.
-  - purcell/setup-emacs is branch-referenced rather than commit-pinned; action pinning is tracked in ROADMAP.md.
+  - >-
+    The core declares Emacs 25.1 compatibility, while the full hosted matrix
+    begins at 28.1 because the current Transient development dependency requires
+    Emacs 28.1.
+  - >-
+    The historical package name ewal-spacemacs-themes triggers a nonfatal
+    package-lint naming warning; package-lint errors remain release-blocking.
+  - >-
+    Package tar metadata is not claimed to be byte-for-byte reproducible across
+    separate builds; the published release asset is identified by its recorded
+    SHA-256 digest.
 
 publication:
   operator_authorized: true
-  repository_created_with_gh_cli: true
-  master_through_compatibility_fix_pushed: true
-  v0_3_0_pushed: true
-  requested_remaining_operations:
-    - commit and push the v0.3.1 release metadata
-    - verify the release commit CI
-    - create and push annotated tag v0.3.1
-  state_during_generation: pending
+  requested_operations:
+    - commit the v0.3.2 release
+    - push master
+    - create and push annotated tag v0.3.2
+    - require hosted CI success for the exact release commit
+    - publish the validated package tarball as a GitHub release asset
+  state_during_generation: not_yet_executed

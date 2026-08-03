@@ -67,8 +67,22 @@
   "Release, development, and planning documents must remain present."
   (dolist (path '("README.org" "CHANGELOG.md" "ROADMAP.md"
                   "release-evidence.yml" ".github/workflows/ci.yml"
-                  "bridge.yml"))
+                  "bridge.yml" "scripts/package-lint.el"
+                  "scripts/package-smoke.sh"))
     (should (file-readable-p (expand-file-name path ewal-release-test-root)))))
+
+(ert-deftest ewal-release-ci-actions-use-immutable-revisions ()
+  "GitHub Actions must be pinned to full immutable commit hashes."
+  (let ((workflow (ewal-release-test--read-file ".github/workflows/ci.yml"))
+        (position 0)
+        (pinned-count 0))
+    (should-not
+     (string-match-p "uses: [^\n]+@\\(?:master\\|main\\|v[0-9]+\\)\\s-*$"
+                     workflow))
+    (while (string-match "uses: [^\n]+@[0-9a-f]\\{40\\}" workflow position)
+      (setq pinned-count (1+ pinned-count)
+            position (match-end 0)))
+    (should (= 2 pinned-count))))
 
 (ert-deftest ewal-release-obsolete-migration-copies-stay-removed ()
   "Superseded local migration files must not return to the package tree."

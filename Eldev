@@ -17,6 +17,21 @@
 ;; default repository-wide pass.
 (add-to-list 'eldev-lint-default-excluded 'package)
 
+;; Repository tooling is executed explicitly and is not a distributable
+;; package library.
+(setq eldev-standard-excludes
+      `(:or ,eldev-standard-excludes "./scripts/package-lint.el"))
+
+;; The core runtime resolves bundled palettes relative to the installed
+;; library.  Include those resources and the user-facing release documents in
+;; generated package tarballs.
+(setq eldev-files-to-package
+      `(:or ,eldev-files-to-package
+            "./palettes/"
+            "./README.org"
+            "./LICENSE"
+            "./CHANGELOG.md"))
+
 (eldev-add-loading-roots
  'test "." "tests" "doom-themes" "spacemacs-themes" "evil-cursors")
 (eldev-add-loading-roots
@@ -27,3 +42,4 @@
 (eldev-add-extra-dependencies
  '(test compile lint) 'transient 'doom-themes 'spacemacs-theme)
 (eldev-add-extra-dependencies 'lint 'package-lint 'relint)
+(eldev-add-extra-dependencies 'exec 'package-lint 'doom-themes 'spacemacs-theme)

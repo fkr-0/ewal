@@ -24,8 +24,8 @@ testing, documentation, and release work described in [[./CHANGELOG.md][CHANGELO
 
 | Item                    | Current value |
 |-------------------------+---------------|
-| Repository release      | =0.3.1=       |
-| Git tag                 | =v0.3.1=      |
+| Repository release      | =0.3.2=       |
+| Git tag                 | =v0.3.2=      |
 | Core Emacs requirement  | Emacs 25.1+   |
 | CI matrix               | 28.1, 29.4, 30.2 |
 | License                 | GPL-3.0-or-later |
@@ -103,7 +103,7 @@ repository. Their dependencies must be installed before loading them.
 The upstream project has historically published =ewal=,
 =ewal-spacemacs-themes=, and =ewal-evil-cursors= as separate packages. Archive
 versions can therefore differ from this fork's current release. Use the source
-checkout when exact =v0.3.1= behavior is required.
+checkout when exact =v0.3.2= behavior is required.
 
 * Quick start
 
@@ -137,6 +137,22 @@ When =ewal-load-colors= is called, Ewal resolves palette sources in this order:
 This keeps pywal compatibility while making the fork work directly with colrz.
 The selected source is cached and reloaded when its identity or modification
 time changes. Pass a non-nil FORCE argument to reload unconditionally.
+
+External JSON is validated before it can replace the active palette. A valid
+cache contains =special= and =colors= sections, valid background and foreground
+colors, and at least one ANSI =colorN= entry. Cursor and the remaining ANSI
+slots may be omitted and are derived or left unavailable as appropriate.
+
+Ewal compares file metadata before and after reading. If a palette producer
+rewrites or atomically replaces the cache mid-read, Ewal retries the complete
+read. Stable malformed or incomplete input falls back to the configured
+built-in palette. Cached source identity includes modification and status-change
+times, size, inode, and device metadata so timestamp-preserving replacement is
+detected. The retry count is configurable:
+
+#+begin_src emacs-lisp
+(setq ewal-json-read-retries 2)
+#+end_src
 
 #+begin_src emacs-lisp
 ;; Add another compatible producer without replacing pywal precedence.
@@ -294,12 +310,16 @@ same checks locally and in CI.
 eldev test
 eldev compile --warnings-as-errors
 eldev lint
+eldev exec --dont-require --file scripts/package-lint.el
+sh scripts/package-smoke.sh
 #+end_src
 
 The consolidated release gate is also exposed through =bridge.yml= as =check=:
 
 #+begin_src sh
-eldev test && eldev compile --warnings-as-errors && eldev lint
+eldev test && eldev compile --warnings-as-errors && eldev lint && \
+  eldev exec --dont-require --file scripts/package-lint.el && \
+  sh scripts/package-smoke.sh
 #+end_src
 
 The test suite covers:
@@ -314,6 +334,7 @@ The test suite covers:
 - runtime loading and stable theme names
 - contrast reports, suggestions, overlays, and persistent overrides
 - release metadata, package dependency versions, and removed migration stubs
+- immutable CI action references and package-boundary metadata
 
 Declarative theme entrypoints use =no-byte-compile: t= because their macros
 produce source forms that are not useful as ordinary byte-compiled libraries.
@@ -332,6 +353,8 @@ which is tracked in [[./ROADMAP.md][ROADMAP.md]].
 1. ERT tests through Eldev.
 2. Byte compilation with warnings treated as errors.
 3. Checkdoc and Relint.
+4. Independent package-lint checks for every published package entrypoint.
+5. Package tarball construction and installed built-in-palette smoke testing.
 
 The core still declares Emacs 25.1 compatibility. The hosted integration matrix
 starts at 28.1 because the current Transient development dependency requires

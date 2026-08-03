@@ -7,7 +7,7 @@
 ;; Author: Uros Perisic
 ;; URL: https://github.com/fkr-0/ewal
 ;;
-;; Version: 0.3.1
+;; Version: 0.3.2
 ;; Keywords: faces
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -34,13 +34,14 @@
 (require 'cl-lib)
 (require 'color)
 (require 'json)
+(require 'subr-x)
 (require 'ewal-color-utils)
 
 (defgroup ewal nil
   "Customizations for ewal theme generator."
   :group 'faces)
 
-(defconst ewal-version "0.3.1"
+(defconst ewal-version "0.3.2"
   "Current Ewal release version.")
 
 (defcustom ewal-json-file "~/.cache/wal/colors.json"
@@ -55,6 +56,15 @@
 Files are checked in order when `ewal-json-file' does not exist.  An explicit
 JSON-FILE passed to `ewal-load-colors' always takes precedence."
   :type '(repeat file)
+  :group 'ewal)
+
+(defcustom ewal-json-read-retries 2
+  "Number of retries when a palette file changes or cannot be parsed.
+
+Retries protect against producers that replace their cache file while Emacs is
+reading it.  A stable malformed or incomplete file still falls back to the
+configured built-in palette after the retries are exhausted."
+  :type 'integer
   :group 'ewal)
 
 (defconst ewal--library-directory
@@ -120,6 +130,12 @@ Typical keys:
 
 (defvar ewal--loaded-source nil
   "Description of the source used to populate `ewal-base-palette'.")
+
+(defvar ewal--json-read-after-read-hook nil
+  "Internal hook run after palette bytes are read and before stability checks.
+
+This hook exists for deterministic concurrency testing and is not part of the
+public Ewal API.")
 
 (defun ewal-palette-color-values (palette)
   "Return valid color values from flat PALETTE."
@@ -194,11 +210,78 @@ so diagnostics remain predictable."
       (or (cl-find-if #'file-exists-p candidates)
           primary))))
 
+(defun ewal--json-file-signature (file)
+  "Return a replacement-sensitive signature for palette FILE, or nil."
+  (when-let ((attributes (file-attributes file)))
+    (list (nth 5 attributes)
+          (nth 6 attributes)
+          (nth 7 attributes)
+          (nth 10 attributes)
+          (nth 11 attributes))))
+
+(defun ewal--validate-json-palette (palette file)
+  "Validate pywal-compatible PALETTE loaded from FILE and return it.
+
+Require the `special' and `colors' sections, valid background and foreground
+colors, and at least one valid ANSI color entry.  Cursor remains optional and
+is derived later when absent."
+  (let ((special (alist-get 'special palette))
+        (colors (alist-get 'colors palette)))
+    (unless (listp special)
+      (error "Palette %s has no valid special section" file))
+    (unless (listp colors)
+      (error "Palette %s has no valid colors section" file))
+    (dolist (role '(background foreground))
+      (unless (ewal-color-valid-p (alist-get role special))
+        (error "Palette %s has no valid %s color" file role)))
+    (when-let ((cursor (alist-get 'cursor special)))
+      (unless (ewal-color-valid-p cursor)
+        (error "Palette %s has an invalid cursor color" file)))
+    (unless
+        (cl-some
+         (lambda (entry)
+           (and (string-match-p "\\`color[0-9]+\\'"
+                                (symbol-name (car-safe entry)))
+                (ewal-color-valid-p (cdr-safe entry))))
+         colors)
+      (error "Palette %s has no valid ANSI colors" file))
+    palette))
+
+(defun ewal--read-json-stable (file)
+  "Read and validate palette FILE, retrying after instability or parse failure.
+
+The file signature is compared before and after reading.  When the producer
+replaces or rewrites FILE during the read, retry up to
+`ewal-json-read-retries' times before signaling the final error."
+  (let ((attempts (1+ (max 0 ewal-json-read-retries)))
+        last-error)
+    (catch 'palette
+      (dotimes (_attempt attempts)
+        (condition-case err
+            (let ((before (ewal--json-file-signature file))
+                  palette)
+              (unless before
+                (signal 'file-missing (list "Palette file is unavailable" file)))
+              (with-temp-buffer
+                (insert-file-contents file)
+                (run-hooks 'ewal--json-read-after-read-hook)
+                (unless (equal before (ewal--json-file-signature file))
+                  (signal 'file-error
+                          (list "Palette file changed while being read" file)))
+                (goto-char (point-min))
+                (let ((json-object-type 'alist)
+                      (json-array-type 'list)
+                      (json-key-type 'symbol))
+                  (setq palette (json-read))))
+              (throw 'palette (ewal--validate-json-palette palette file)))
+          (error (setq last-error err))))
+      (if last-error
+          (signal (car last-error) (cdr last-error))
+        (error "Palette %s could not be read" file)))))
+
 (defun ewal--parse-json (file)
   "Parse pywal JSON FILE and populate `ewal-base-palette`."
-  (let* ((json-object-type 'alist)
-          (json-array-type 'list)
-          (colors (json-read-file file)))
+  (let ((colors (ewal--read-json-stable file)))
     (setq ewal-base-palette
           (ewal--finalize-palette
            (append (alist-get 'special colors)
@@ -259,20 +342,26 @@ and fall back to built-in palettes."
          (source
           (if (and (not ewal-use-built-in-always)
                    (file-exists-p file))
-              (list 'json file (nth 5 (file-attributes file)))
+              (list 'json file (ewal--json-file-signature file))
             (list 'built-in ewal-dark-palette-p ewal-built-in-palette
-                  (expand-file-name ewal-built-in-palette-path)))))
+                  (expand-file-name ewal-built-in-palette-path))))
+         (loaded-source source))
     (when (or force
               (null ewal-base-palette)
               (not (equal source ewal--loaded-source)))
       (condition-case err
           (if (eq (car source) 'json)
-              (ewal--parse-json file)
+              (progn
+                (ewal--parse-json file)
+                ;; A stable read may have retried after an atomic replacement.
+                ;; Cache the signature of the bytes that actually won.
+                (setq loaded-source
+                      (list 'json file (ewal--json-file-signature file))))
             (ewal--load-built-in-palette))
         (error
          (message "[ewal] Failed to load colors: %S" err)
          (ewal--load-built-in-palette)))
-      (setq ewal--loaded-source source)))
+      (setq ewal--loaded-source loaded-source)))
   ewal-base-palette)
 (defalias 'ewal--normalize-color #'ewal-color-normalize)
 

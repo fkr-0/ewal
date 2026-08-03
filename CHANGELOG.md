@@ -6,6 +6,42 @@ uses [Semantic Versioning](https://semver.org/) and follows the structure of
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-08-04
+
+### Added
+
+- Stable palette-file reads with configurable retries when a pywal-compatible
+  producer rewrites or atomically replaces its cache during loading.
+- Replacement-sensitive source caching using modification and status-change
+  times, size, inode, and device metadata instead of modification time alone.
+- Successful retry paths retain the final accepted file signature rather than
+  the pre-replacement signature.
+- Focused package-lint coverage for the core, Doom, Spacemacs, and Evil package
+  entrypoints, available locally and enforced in every hosted CI job.
+- Package artifact smoke testing that verifies bundled palettes are present and
+  loadable from the extracted tarball.
+- Regression fixtures for malformed JSON, incomplete cache structures, minimal
+  compatible palettes, and concurrent cache replacement.
+
+### Changed
+
+- GitHub Actions now use immutable commit revisions for checkout and Emacs
+  setup rather than mutable tags or branches.
+- The complete local `check` command now includes package-boundary linting in
+  addition to tests, strict compilation, Checkdoc, Relint, and package artifact
+  validation.
+
+### Fixed
+
+- Malformed or structurally incomplete external palette files now fall back to
+  the configured built-in palette instead of silently producing a synthetic
+  mostly black-and-white theme.
+- Palette validation now requires valid background and foreground colors plus
+  at least one ANSI color while remaining compatible with partial palettes and
+  optional cursor values.
+- Generated package tarballs now include bundled palettes, the README, license,
+  and changelog; installed built-in fallback no longer points at missing files.
+
 ## [0.3.1] - 2026-08-03
 
 ### Fixed
@@ -84,7 +120,8 @@ uses [Semantic Versioning](https://semver.org/) and follows the structure of
 
 - Initial tagged release of the pywal-driven Emacs theme packages.
 
-[Unreleased]: https://github.com/fkr-0/ewal/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/fkr-0/ewal/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/fkr-0/ewal/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/fkr-0/ewal/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/fkr-0/ewal/releases/tag/v0.3.0
 [0.2.1]: https://github.com/cyruseuros/ewal/releases/tag/v0.2.1

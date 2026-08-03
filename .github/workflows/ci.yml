@@ -28,10 +28,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
 
       - name: Install Emacs
-        uses: purcell/setup-emacs@master
+        uses: purcell/setup-emacs@bdc64dc730ae1fcba200bfd52cb1b4cf6159cbe5 # v8.0
         with:
           version: ${{ matrix.emacs-version }}
 
@@ -48,3 +48,9 @@ jobs:
 
       - name: Run linters
         run: eldev lint
+
+      - name: Lint package boundaries
+        run: eldev exec --dont-require --file scripts/package-lint.el
+
+      - name: Smoke-test package artifact
+        run: sh scripts/package-smoke.sh

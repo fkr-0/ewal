@@ -1,4 +1,4 @@
-;;; ewal-evil-cursors.el --- `ewal'-colored evil cursor for Emacs and Spacemacs -*- lexical-binding: t; -*-
+;;; ewal-evil-cursors.el --- Palette-colored Evil cursors and mode-lines -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019 Uros Perisic
 

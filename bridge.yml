@@ -14,7 +14,15 @@ commands:
     run: ["eldev", "lint"]
     description: Run Checkdoc and Relint across maintained package files.
     category: lint
+  package-lint:
+    run: ["eldev", "exec", "--dont-require", "--file", "scripts/package-lint.el"]
+    description: Lint each published package boundary independently.
+    category: lint
+  package-smoke:
+    run: ["sh", "scripts/package-smoke.sh"]
+    description: Build and smoke-test the installable package tarball.
+    category: build
   check:
-    run: ["sh", "-c", "eldev test && eldev compile --warnings-as-errors && eldev lint"]
+    run: ["sh", "-c", "eldev test && eldev compile --warnings-as-errors && eldev lint && eldev exec --dont-require --file scripts/package-lint.el && sh scripts/package-smoke.sh"]
     description: Run the complete local release quality gate.
     category: custom

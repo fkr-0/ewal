@@ -13,14 +13,13 @@ ship only with headless tests and reproducible contrast evidence.
 - Dynamic theme generation, palette audits, and interactive contrast repair.
 - Eldev tests, warnings-as-errors compilation, linting, and a multi-version CI
   matrix.
+- Stable cache-file reads with malformed-input fallback and replacement retry.
+- Package-boundary linting and immutable GitHub Action revisions.
 
 ## 0.3.x — hardening and packaging
 
-- Add focused package-lint jobs for each MELPA package boundary.
-- Pin third-party GitHub Actions to immutable commit hashes.
 - Exercise the declared Emacs 25.1 floor in a reproducible container, while
   retaining the full-integration 28/29/30 hosted matrix.
-- Add malformed, partial, and concurrently replaced cache-file fixtures.
 - Validate every generated theme against a stable set of representative faces.
 - Document installation recipes for package-vc, straight.el, and Doom Emacs.
 

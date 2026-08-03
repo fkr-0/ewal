@@ -24,6 +24,12 @@
            contents)
       (match-string 1 contents))))
 
+(defun ewal-release-test--ewal-requirement (path)
+  "Return the Ewal dependency version declared by repository-relative PATH."
+  (let ((contents (ewal-release-test--read-file path)))
+    (when (string-match "(ewal \"\\([0-9.]+\\)\")" contents)
+      (match-string 1 contents))))
+
 (ert-deftest ewal-release-version-is-canonical-and-semantic ()
   "VERSION, the core header, and `ewal-version' must agree."
   (let ((version (string-trim (ewal-release-test--read-file "VERSION"))))
@@ -35,8 +41,8 @@
     (should (equal version
                    (ewal-release-test--header-value "ewal.el" "Version")))))
 
-(ert-deftest ewal-release-package-dependencies-target-current-core ()
-  "Maintained adaptors must require the current core release."
+(ert-deftest ewal-release-package-dependency-floors-are-compatible ()
+  "Maintained adaptors must require a compatible contrast-safe core release."
   (dolist (path '("doom-themes/ewal-doom-themes.el"
                   "doom-themes/ewal-doom-one-theme.el"
                   "doom-themes/ewal-doom-outrun-electric-theme.el"
@@ -44,10 +50,18 @@
                   "doom-themes/ewal-doom-vibrant-theme.el"
                   "evil-cursors/ewal-evil-cursors.el"
                   "spacemacs-themes/ewal-spacemacs-themes.el"))
-    (ert-info ((format "Package: %s" path))
-      (should (string-match-p
-               (regexp-quote (format "(ewal \"%s\")" ewal-version))
-               (ewal-release-test--read-file path))))))
+    (let ((requirement (ewal-release-test--ewal-requirement path)))
+      (ert-info ((format "Package: %s" path))
+        (should requirement)
+        (should (version<= "0.3.0" requirement))
+        (should (version<= requirement ewal-version))))))
+
+(ert-deftest ewal-release-adaptor-versions-follow-repository-release ()
+  "Primary Doom and Spacemacs adaptor packages must follow `ewal-version'."
+  (dolist (path '("doom-themes/ewal-doom-themes.el"
+                  "spacemacs-themes/ewal-spacemacs-themes.el"))
+    (should (equal ewal-version
+                   (ewal-release-test--header-value path "Version")))))
 
 (ert-deftest ewal-release-supporting-documents-exist ()
   "Release, development, and planning documents must remain present."

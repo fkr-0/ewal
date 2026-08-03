@@ -24,10 +24,10 @@ testing, documentation, and release work described in [[./CHANGELOG.md][CHANGELO
 
 | Item                    | Current value |
 |-------------------------+---------------|
-| Repository release      | =0.3.0=       |
-| Git tag                 | =v0.3.0=      |
+| Repository release      | =0.3.1=       |
+| Git tag                 | =v0.3.1=      |
 | Core Emacs requirement  | Emacs 25.1+   |
-| CI matrix               | 27.2, 29.4, 30.2 |
+| CI matrix               | 28.1, 29.4, 30.2 |
 | License                 | GPL-3.0-or-later |
 | Canonical version file  | [[./VERSION][VERSION]]       |
 
@@ -103,7 +103,7 @@ repository. Their dependencies must be installed before loading them.
 The upstream project has historically published =ewal=,
 =ewal-spacemacs-themes=, and =ewal-evil-cursors= as separate packages. Archive
 versions can therefore differ from this fork's current release. Use the source
-checkout when exact =v0.3.0= behavior is required.
+checkout when exact =v0.3.1= behavior is required.
 
 * Quick start
 
@@ -327,15 +327,16 @@ which is tracked in [[./ROADMAP.md][ROADMAP.md]].
 
 * Continuous integration
 
-[[./.github/workflows/ci.yml][GitHub Actions CI]] runs the following gate for Emacs 27.2, 29.4, and 30.2:
+[[./.github/workflows/ci.yml][GitHub Actions CI]] runs the following gate for Emacs 28.1, 29.4, and 30.2:
 
 1. ERT tests through Eldev.
 2. Byte compilation with warnings treated as errors.
 3. Checkdoc and Relint.
 
-The core still declares Emacs 25.1 compatibility. Reproducibly exercising that
-minimum on modern hosted infrastructure is retained as an explicit roadmap
-item rather than being implied by the current matrix.
+The core still declares Emacs 25.1 compatibility. The hosted integration matrix
+starts at 28.1 because the current Transient development dependency requires
+Emacs 28.1. Reproducibly exercising the core minimum without optional package
+constraints remains an explicit roadmap item.
 
 * Releases and versioning
 

@@ -6,6 +6,21 @@ uses [Semantic Versioning](https://semver.org/) and follows the structure of
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-08-03
+
+### Fixed
+
+- Kept Transient prefix macros out of generated autoload files and dispatched
+  the optional palette and contrast panels through `call-interactively`, which
+  restores warnings-as-errors compilation on Emacs 29.4.
+- Added forward declarations and regression tests for optional Transient
+  command boundaries.
+- Started the full-integration CI matrix at Emacs 28.1, matching the current
+  Transient development dependency, while retaining the documented Emacs 25.1
+  core compatibility target.
+- Upgraded checkout to `actions/checkout@v5` and limited push CI to `master`,
+  avoiding the Node.js 20 deprecation warning and duplicate tag-push runs.
+
 ## [0.3.0] - 2026-08-03
 
 ### Added
@@ -69,7 +84,8 @@ uses [Semantic Versioning](https://semver.org/) and follows the structure of
 
 - Initial tagged release of the pywal-driven Emacs theme packages.
 
-[Unreleased]: https://github.com/fkr-0/ewal/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/fkr-0/ewal/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/fkr-0/ewal/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/fkr-0/ewal/releases/tag/v0.3.0
 [0.2.1]: https://github.com/cyruseuros/ewal/releases/tag/v0.2.1
 [0.2.0]: https://github.com/cyruseuros/ewal/releases/tag/v0.2

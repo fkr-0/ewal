@@ -19,7 +19,7 @@ ship only with headless tests and reproducible contrast evidence.
 - Add focused package-lint jobs for each MELPA package boundary.
 - Pin third-party GitHub Actions to immutable commit hashes.
 - Exercise the declared Emacs 25.1 floor in a reproducible container, while
-  retaining the faster 27/29/30 hosted matrix.
+  retaining the full-integration 28/29/30 hosted matrix.
 - Add malformed, partial, and concurrently replaced cache-file fixtures.
 - Validate every generated theme against a stable set of representative faces.
 - Document installation recipes for package-vc, straight.el, and Doom Emacs.

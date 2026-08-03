@@ -1,61 +1,71 @@
 schema_version: 1
-generated_at: "2026-08-03T22:44:03+02:00"
-last_verified_at: "2026-08-03T22:44:58+02:00"
+generated_at: "2026-08-03T22:56:34+02:00"
 release:
   project: ewal
-  version: 0.3.0
-  tag: v0.3.0
+  version: 0.3.1
+  tag: v0.3.1
   tag_policy: annotated
   branch: master
   release_unit: repository
   canonical_version_file: VERSION
-  source_head_before_release_commit: 2096326e468d7bec2bc1f075dc9fbb3e3185cb7c
-  base_tag: v0.2.1
-  base_tag_commit: 732a2f4abb480f9f5a3249af822d8eb1e90324e3
+  source_head_before_release_commit: 4dd36f12033e52b48265f8e4cb36b4e99a922dbe
+  base_tag: v0.3.0
+  base_tag_commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
+  compatibility_fix_commit: 4dd36f12033e52b48265f8e4cb36b4e99a922dbe
   target: release commit containing this evidence file
-  state_during_generation: pending_commit_and_tag
+  state_during_generation: pending_release_commit_and_tag
   expected_final_state: committed_tagged_and_pushed
 
 version_contract:
-  repository_version: 0.3.0
-  core_package_version: 0.3.0
-  doom_adaptor_version: 0.3.0
-  spacemacs_adaptor_version: 0.3.0
+  repository_version: 0.3.1
+  core_package_version: 0.3.1
+  doom_adaptor_version: 0.3.1
+  spacemacs_adaptor_version: 0.3.1
   evil_cursors_package_version: 1.1.0
+  adaptor_core_dependency_floor: 0.3.0
   tag_format: vMAJOR.MINOR.PATCH
   changelog_policy: Keep a Changelog
   semantic_versioning: true
 
+reason_for_patch_release:
+  initial_release: v0.3.0
+  initial_release_commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
+  findings:
+    - Emacs 27.2 could not resolve the current Transient development dependency, which requires Emacs 28.1.
+    - Emacs 29.4 warnings-as-errors compilation rejected direct calls to Transient prefix commands marked for interactive use only.
+    - Generated autoload loading could encounter Transient prefix expansion before Transient was loaded.
+    - actions/checkout@v4 emitted a hosted Node.js 20 deprecation warning.
+  disposition:
+    - Move the full optional-integration matrix floor to Emacs 28.1 while retaining the documented Emacs 25.1 core target.
+    - Keep Transient prefix macros behind autoloaded wrapper functions.
+    - Dispatch prefix commands with call-interactively and declare optional functions explicitly.
+    - Upgrade checkout to actions/checkout@v5.
+    - Restrict push CI to master to avoid duplicate branch and tag runs.
+
 workspace_review:
   original_remote: upstream
   original_remote_url: https://github.com/cyruseuros/ewal
-  intended_origin: https://github.com/fkr-0/ewal
-  initial_modified_tracked:
-    - .gitignore
-    - README.org
-    - ewal-autoloads.el
-    - ewal.el
-  initial_untracked:
-    - Eldev
-    - bridge.yml
-    - cc.el
-    - update-1.el
-    - update-2.el
-  dispositions:
+  origin_url: https://github.com/fkr-0/ewal
+  github_repository:
+    full_name: fkr-0/ewal
+    public: true
+    fork: true
+    parent: cyruseuros/ewal
+  initial_untracked_dispositions:
     Eldev: absorbed as canonical development configuration
     bridge.yml: absorbed and expanded into the local quality gate
     cc.el: removed as an obsolete subset of ewal-theme-contrast-check.el
     update-1.el: removed as a superseded Spacemacs adaptor draft
     update-2.el: removed as a superseded Spacemacs adaptor draft
-    ewal-autoloads.el: removed from version control as generated output
+  generated_file_disposition:
+    ewal-autoloads.el: removed from version control and ignored
   preserved_compatibility:
     - traditional pywal cache remains the primary default
     - colrz cache is supported as the first fallback
     - original upstream remote is retained
-    - ewal-evil-cursors keeps its independent major-version history
+    - ewal-evil-cursors keeps its independent package version history
 
 repository_inventory:
-  tracked_files_before_release_commit: 288
   bundled_palette_json_files: 256
   ert_test_files: 8
   optional_integrations:
@@ -65,55 +75,73 @@ repository_inventory:
     - Transient palette and contrast panels
 
 verification_environment:
-  os: Arch Linux
-  emacs: GNU Emacs 30.2
+  local_os: Arch Linux
+  local_emacs: GNU Emacs 30.2
   eldev: 1.11.1
   git: 2.55.0
   gh: 2.53.0
 
 verification:
-  baseline:
-    command: eldev test && eldev compile --warnings-as-errors && eldev lint
-    result: passed
-    tests: 29
-    unexpected_tests: 0
-    compile_warnings: 0
-    lint_warnings: 0
-  release_gate:
+  local_release_gate:
     command: eldev test && eldev compile --warnings-as-errors && eldev lint
     bridge_command: check
     result: passed
-    duration_ms: 3363
-    tests: 34
+    completed_at: "2026-08-03T22:56:21+02:00"
+    duration_ms: 3272
+    tests: 38
     unexpected_tests: 0
     compile_warnings: 0
     checkdoc_warnings: 0
     relint_warnings: 0
   structural_checks:
     - command: git diff --check
-      result: passed
-    - command: python -c 'yaml.safe_load bridge.yml and .github/workflows/ci.yml'
-      result: passed
-    - command: emacs -Q --batch README.org --eval '(org-element-parse-buffer)'
-      result: passed
+      expected: pass
+    - command: parse bridge.yml, CI, and release evidence as YAML
+      expected: pass
+    - command: parse README.org with org-element
+      expected: pass
     - command: reject stale future obsolete-version markers
-      result: passed
-    - command: reject unintended local absolute paths
-      result: passed
-    - command: reject credential-like additions
-      result: passed
+      expected: pass
+    - command: reject unintended local absolute paths and credential-like additions
+      expected: pass
 
-ci:
-  workflow: .github/workflows/ci.yml
-  matrix:
-    - "27.2"
-    - "29.4"
-    - "30.2"
-  steps:
-    - ERT tests through Eldev
-    - byte compilation with warnings as errors
-    - Checkdoc and Relint
-  hosted_result_during_generation: not_available_before_push
+hosted_ci:
+  initial_v0_3_0_runs:
+    - run_id: 30851833069
+      ref: master
+      commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
+      conclusion: failure
+      relevant_failures:
+        - job: Emacs 27.2
+          step: Run tests
+          reason: current Transient requires Emacs 28.1
+        - job: Emacs 29.4
+          step: Compile with warnings as errors
+          reason: direct noninteractive call to an interactive-only Transient prefix
+    - run_id: 30851831461
+      ref: v0.3.0
+      commit: c6d19cf5cf14da8183ced2a06aa952e9d14744c9
+      conclusion: failure
+      note: duplicate tag-push run using the same initial workflow
+  verified_compatibility_run:
+    run_id: 30852220550
+    commit: 4dd36f12033e52b48265f8e4cb36b4e99a922dbe
+    conclusion: success
+    url: https://github.com/fkr-0/ewal/actions/runs/30852220550
+    jobs:
+      - emacs: "28.1"
+        job_id: 91814695943
+        conclusion: success
+      - emacs: "29.4"
+        job_id: 91814696028
+        conclusion: success
+      - emacs: "30.2"
+        job_id: 91814695998
+        conclusion: success
+    required_steps:
+      - tests
+      - compile with warnings as errors
+      - Checkdoc and Relint
 
 artifacts:
   produced: []
@@ -126,14 +154,17 @@ independent_review:
   treated_as_release_evidence: false
 
 known_limitations:
-  - The declared Emacs 25.1 minimum is not exercised by the hosted 27.2/29.4/30.2 matrix.
+  - The declared Emacs 25.1 core minimum is not yet exercised separately from optional modern dependencies.
   - Package-lint remains package-boundary specific and is tracked in ROADMAP.md.
-  - Third-party GitHub Actions are version-referenced rather than commit-pinned; pinning is tracked in ROADMAP.md.
+  - purcell/setup-emacs is branch-referenced rather than commit-pinned; action pinning is tracked in ROADMAP.md.
 
 publication:
   operator_authorized: true
-  requested_operations:
-    - create the GitHub fork/repository with gh CLI
-    - push master
-    - push v0.3.0
-  state_during_generation: not_yet_executed
+  repository_created_with_gh_cli: true
+  master_through_compatibility_fix_pushed: true
+  v0_3_0_pushed: true
+  requested_remaining_operations:
+    - commit and push the v0.3.1 release metadata
+    - verify the release commit CI
+    - create and push annotated tag v0.3.1
+  state_during_generation: pending

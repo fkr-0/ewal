@@ -1,0 +1,139 @@
+schema_version: 1
+generated_at: "2026-08-03T22:44:03+02:00"
+last_verified_at: "2026-08-03T22:44:58+02:00"
+release:
+  project: ewal
+  version: 0.3.0
+  tag: v0.3.0
+  tag_policy: annotated
+  branch: master
+  release_unit: repository
+  canonical_version_file: VERSION
+  source_head_before_release_commit: 2096326e468d7bec2bc1f075dc9fbb3e3185cb7c
+  base_tag: v0.2.1
+  base_tag_commit: 732a2f4abb480f9f5a3249af822d8eb1e90324e3
+  target: release commit containing this evidence file
+  state_during_generation: pending_commit_and_tag
+  expected_final_state: committed_tagged_and_pushed
+
+version_contract:
+  repository_version: 0.3.0
+  core_package_version: 0.3.0
+  doom_adaptor_version: 0.3.0
+  spacemacs_adaptor_version: 0.3.0
+  evil_cursors_package_version: 1.1.0
+  tag_format: vMAJOR.MINOR.PATCH
+  changelog_policy: Keep a Changelog
+  semantic_versioning: true
+
+workspace_review:
+  original_remote: upstream
+  original_remote_url: https://github.com/cyruseuros/ewal
+  intended_origin: https://github.com/fkr-0/ewal
+  initial_modified_tracked:
+    - .gitignore
+    - README.org
+    - ewal-autoloads.el
+    - ewal.el
+  initial_untracked:
+    - Eldev
+    - bridge.yml
+    - cc.el
+    - update-1.el
+    - update-2.el
+  dispositions:
+    Eldev: absorbed as canonical development configuration
+    bridge.yml: absorbed and expanded into the local quality gate
+    cc.el: removed as an obsolete subset of ewal-theme-contrast-check.el
+    update-1.el: removed as a superseded Spacemacs adaptor draft
+    update-2.el: removed as a superseded Spacemacs adaptor draft
+    ewal-autoloads.el: removed from version control as generated output
+  preserved_compatibility:
+    - traditional pywal cache remains the primary default
+    - colrz cache is supported as the first fallback
+    - original upstream remote is retained
+    - ewal-evil-cursors keeps its independent major-version history
+
+repository_inventory:
+  tracked_files_before_release_commit: 288
+  bundled_palette_json_files: 256
+  ert_test_files: 8
+  optional_integrations:
+    - Doom themes
+    - Spacemacs themes
+    - Evil cursors and mode-lines
+    - Transient palette and contrast panels
+
+verification_environment:
+  os: Arch Linux
+  emacs: GNU Emacs 30.2
+  eldev: 1.11.1
+  git: 2.55.0
+  gh: 2.53.0
+
+verification:
+  baseline:
+    command: eldev test && eldev compile --warnings-as-errors && eldev lint
+    result: passed
+    tests: 29
+    unexpected_tests: 0
+    compile_warnings: 0
+    lint_warnings: 0
+  release_gate:
+    command: eldev test && eldev compile --warnings-as-errors && eldev lint
+    bridge_command: check
+    result: passed
+    duration_ms: 3363
+    tests: 34
+    unexpected_tests: 0
+    compile_warnings: 0
+    checkdoc_warnings: 0
+    relint_warnings: 0
+  structural_checks:
+    - command: git diff --check
+      result: passed
+    - command: python -c 'yaml.safe_load bridge.yml and .github/workflows/ci.yml'
+      result: passed
+    - command: emacs -Q --batch README.org --eval '(org-element-parse-buffer)'
+      result: passed
+    - command: reject stale future obsolete-version markers
+      result: passed
+    - command: reject unintended local absolute paths
+      result: passed
+    - command: reject credential-like additions
+      result: passed
+
+ci:
+  workflow: .github/workflows/ci.yml
+  matrix:
+    - "27.2"
+    - "29.4"
+    - "30.2"
+  steps:
+    - ERT tests through Eldev
+    - byte compilation with warnings as errors
+    - Checkdoc and Relint
+  hosted_result_during_generation: not_available_before_push
+
+artifacts:
+  produced: []
+  note: This is a source-only Emacs Lisp release; no binary artifact is required.
+
+independent_review:
+  backend: OpenCode
+  result: unavailable
+  reason: review task exceeded the 120000 ms backend limit and returned no findings
+  treated_as_release_evidence: false
+
+known_limitations:
+  - The declared Emacs 25.1 minimum is not exercised by the hosted 27.2/29.4/30.2 matrix.
+  - Package-lint remains package-boundary specific and is tracked in ROADMAP.md.
+  - Third-party GitHub Actions are version-referenced rather than commit-pinned; pinning is tracked in ROADMAP.md.
+
+publication:
+  operator_authorized: true
+  requested_operations:
+    - create the GitHub fork/repository with gh CLI
+    - push master
+    - push v0.3.0
+  state_during_generation: not_yet_executed

@@ -60,14 +60,14 @@ than a package metadata API."
     (ewal-insert-uncustomized-faces library theme-faces file)))
 
 (define-obsolete-function-alias
-  'find-uncustomized-faces #'ewal-find-uncustomized-faces "0.4")
+  'find-uncustomized-faces #'ewal-find-uncustomized-faces "0.3.0")
 (define-obsolete-function-alias
-  'retrieve-customized-faces #'ewal-theme-customized-faces "0.4")
+  'retrieve-customized-faces #'ewal-theme-customized-faces "0.3.0")
 (define-obsolete-function-alias
-  'insert-uncustomized-faces #'ewal-insert-uncustomized-faces "0.4")
+  'insert-uncustomized-faces #'ewal-insert-uncustomized-faces "0.3.0")
 (define-obsolete-function-alias
   'insert-uncustomized-faces-interactive
-  #'ewal-insert-uncustomized-faces-interactive "0.4")
+  #'ewal-insert-uncustomized-faces-interactive "0.3.0")
 
 (provide 'uncustomized-faces)
 ;;; uncustomized-faces.el ends here

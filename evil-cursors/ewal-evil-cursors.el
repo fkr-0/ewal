@@ -3,11 +3,11 @@
 ;; Copyright (C) 2019 Uros Perisic
 
 ;; Author: Uros Perisic
-;; URL: https://gitlab.com/jjzmajic/ewal
+;; URL: https://github.com/fkr-0/ewal
 ;;
-;; Version: 1.0
+;; Version: 1.1.0
 ;; Keywords: faces
-;; Package-Requires: ((emacs "25") (ewal "0.1"))
+;; Package-Requires: ((emacs "25") (ewal "0.3.0"))
 
 ;; This program is free software: you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free Software

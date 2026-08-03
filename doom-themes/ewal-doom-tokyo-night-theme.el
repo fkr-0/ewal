@@ -1,6 +1,6 @@
 ;;; ewal-doom-tokyo-night-theme.el --- ewal adaptation of doom-tokyo-night -*- lexical-binding: t; no-byte-compile: t; -*-
 
-;; Package-Requires: ((emacs "25") (ewal "0.3") (doom-themes "2.3.0"))
+;; Package-Requires: ((emacs "25") (ewal "0.3.0") (doom-themes "2.3.0"))
 
 ;;; Commentary:
 ;;

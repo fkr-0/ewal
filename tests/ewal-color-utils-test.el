@@ -39,10 +39,29 @@
          (final (ewal--finalize-palette palette)))
     (dolist (role '(foreground cursor comment highlight))
       (let* ((color (alist-get role final))
-             (minimum (if (eq role 'foreground) 4.5 3.0)))
+             (minimum (if (memq role '(foreground comment)) 4.5 3.0)))
         (should (ewal-color-valid-p color))
         (should-not (ewal-color-equal-p color background))
         (should (>= (ewal-color-contrast-ratio color background) minimum))))))
+
+(ert-deftest ewal-json-source-resolution-prefers-primary-then-fallback ()
+  "Palette lookup should preserve pywal compatibility and support colrz fallback."
+  (let* ((tmpdir (make-temp-file "ewal-source-" t))
+         (primary (expand-file-name "wal/colors.json" tmpdir))
+         (fallback (expand-file-name "colrz/current/colors.json" tmpdir))
+         (explicit (expand-file-name "explicit/colors.json" tmpdir)))
+    (unwind-protect
+        (progn
+          (make-directory (file-name-directory fallback) t)
+          (with-temp-file fallback (insert "{}"))
+          (let ((ewal-json-file primary)
+                (ewal-json-file-fallbacks (list fallback)))
+            (should (equal (ewal--resolve-json-file) fallback))
+            (make-directory (file-name-directory primary) t)
+            (with-temp-file primary (insert "{}"))
+            (should (equal (ewal--resolve-json-file) primary))
+            (should (equal (ewal--resolve-json-file explicit) explicit))))
+      (delete-directory tmpdir t))))
 
 (ert-deftest ewal-built-in-palette-path-is-package-relative-and-loadable ()
   "The default bundled palette location should work outside ~/.emacs.d."

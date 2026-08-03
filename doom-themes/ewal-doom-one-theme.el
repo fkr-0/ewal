@@ -1,6 +1,6 @@
 ;;; ewal-doom-one-theme.el --- Dread the color of darkness -*- lexical-binding: t; no-byte-compile: t; -*-
 
-;; Package-Requires: ((emacs "25") (ewal "0.3") (doom-themes "2.3.0"))
+;; Package-Requires: ((emacs "25") (ewal "0.3.0") (doom-themes "2.3.0"))
 
 ;;; Commentary:
 ;;

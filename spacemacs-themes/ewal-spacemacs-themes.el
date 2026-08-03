@@ -1,6 +1,7 @@
 ;;; ewal-spacemacs-themes.el --- Ride the rainbow spaceship -*- lexical-binding: t; -*-
 
-;; Package-Requires: ((emacs "25") (ewal "0.3") (spacemacs-theme "0.2.0"))
+;; Version: 0.3.0
+;; Package-Requires: ((emacs "25") (ewal "0.3.0") (spacemacs-theme "0.2.0"))
 
 ;;; Commentary:
 ;;

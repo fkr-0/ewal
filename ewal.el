@@ -5,9 +5,9 @@
 ;; Copyright (C) 2016-2018 Henrik Lissner
 
 ;; Author: Uros Perisic
-;; URL: https://gitlab.com/jjzmajic/ewal
+;; URL: https://github.com/fkr-0/ewal
 ;;
-;; Version: 0.3
+;; Version: 0.3.0
 ;; Keywords: faces
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -40,9 +40,21 @@
   "Customizations for ewal theme generator."
   :group 'faces)
 
+(defconst ewal-version "0.3.0"
+  "Current Ewal release version.")
+
 (defcustom ewal-json-file "~/.cache/wal/colors.json"
-  "Location of the pywal-generated theme in JSON format."
+  "Primary pywal-compatible JSON palette file."
   :type 'file
+  :group 'ewal)
+
+(defcustom ewal-json-file-fallbacks
+  '("~/.cache/colrz/current/colors.json")
+  "Fallback pywal-compatible JSON palette files.
+
+Files are checked in order when `ewal-json-file' does not exist.  An explicit
+JSON-FILE passed to `ewal-load-colors' always takes precedence."
+  :type '(repeat file)
   :group 'ewal)
 
 (defconst ewal--library-directory
@@ -164,7 +176,23 @@ background."
     palette))
 
 (define-obsolete-function-alias
-  'ewal--palette-color-values #'ewal-palette-color-values "0.4")
+  'ewal--palette-color-values #'ewal-palette-color-values "0.3.0")
+
+(defun ewal--resolve-json-file (&optional json-file)
+  "Return the pywal-compatible palette file selected for JSON-FILE.
+
+When JSON-FILE is non-nil, return its expanded path even when it does not yet
+exist.  Otherwise prefer `ewal-json-file', then the first existing path in
+`ewal-json-file-fallbacks'.  If none exists, return the expanded primary path
+so diagnostics remain predictable."
+  (if json-file
+      (expand-file-name json-file)
+    (let* ((primary (expand-file-name ewal-json-file))
+           (candidates
+            (cons primary (mapcar #'expand-file-name
+                                  ewal-json-file-fallbacks))))
+      (or (cl-find-if #'file-exists-p candidates)
+          primary))))
 
 (defun ewal--parse-json (file)
   "Parse pywal JSON FILE and populate `ewal-base-palette`."
@@ -227,7 +255,7 @@ With FORCE non-nil, reload even when the selected source has not changed.
 
 Return the resulting `ewal-base-palette` alist.  On any error, log a message
 and fall back to built-in palettes."
-  (let* ((file (expand-file-name (or json-file ewal-json-file)))
+  (let* ((file (ewal--resolve-json-file json-file))
          (source
           (if (and (not ewal-use-built-in-always)
                    (file-exists-p file))

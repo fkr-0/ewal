@@ -1,43 +1,150 @@
+#+title: Ewal
+#+startup: overview
+
 [[https://melpa.org/#/ewal][file:https://melpa.org/packages/ewal-badge.svg]] [[https://melpa.org/#/ewal-spacemacs-themes][file:https://melpa.org/packages/ewal-spacemacs-themes-badge.svg]] [[https://melpa.org/#/ewal-evil-cursors][file:https://melpa.org/packages/ewal-evil-cursors-badge.svg]]
 
 [[./img/ewal.png]]
 
-=ewal= is a pywal-compatible, terminal-aware color and theme toolkit for Emacs.
-It can read =~/.cache/wal/colors.json= or use one of the bundled palettes, and
-provides adaptors for Doom themes, Spacemacs themes, Evil cursors, and
-mode-lines.
+* Overview
 
-The core package uses only Emacs libraries.  Doom, Spacemacs, Evil, and
-Transient are dependencies of their respective optional integrations rather
-than of palette loading itself.
+=ewal= is a pywal-compatible, terminal-aware color and theme toolkit for Emacs.
+It turns a small palette into reusable semantic colors, contrast-safe editor
+faces, Doom and Spacemacs themes, Evil cursor styles, and palette inspection
+workflows.
+
+The core remains dependency-light and works in batch Emacs. Optional integration
+packages add Doom themes, Spacemacs themes, Evil cursor and mode-line styling,
+dynamic theme generation, palette auditing, and Transient interfaces.
+
+This repository is the maintained =fkr-0/ewal= fork. The original project remains
+recorded as the Git =upstream= remote, while this fork carries the contrast,
+testing, documentation, and release work described in [[./CHANGELOG.md][CHANGELOG.md]].
+
+* Release status
+
+| Item                    | Current value |
+|-------------------------+---------------|
+| Repository release      | =0.3.0=       |
+| Git tag                 | =v0.3.0=      |
+| Core Emacs requirement  | Emacs 25.1+   |
+| CI matrix               | 27.2, 29.4, 30.2 |
+| License                 | GPL-3.0-or-later |
+| Canonical version file  | [[./VERSION][VERSION]]       |
+
+=ewal-evil-cursors= retains its own package history and advances independently
+to version =1.1.0= while depending on core =ewal 0.3.0=.
 
 * Highlights
 
-- More than 200 bundled dark and light palettes.
-- Display-independent hexadecimal color parsing suitable for batch Emacs and CI.
-- WCAG relative-luminance and contrast calculations.
-- Contrast-safe semantic roles for =foreground=, =cursor=, =comment=, and
-  =highlight=.
-- Doom and Spacemacs adaptors that repair low-contrast colors before themes are
-  constructed.
-- Evil cursor and mode-line colors that remain distinct from the editor
-  background.
-- Batch-friendly palette auditing and optional Transient interfaces.
+- Reads traditional pywal JSON and compatible colrz output.
+- Includes 256 bundled dark and light palettes.
+- Parses hexadecimal colors without relying on the active terminal or display.
+- Implements WCAG relative luminance and contrast calculations.
+- Repairs weak or identical foreground/background pairs deterministically.
+- Derives stable semantic roles for foreground, comment, cursor, and highlight.
+- Generates and audits Doom and Spacemacs themes.
+- Styles Evil cursors and optional state-aware mode-lines.
+- Audits complete palette directories in interactive or batch workflows.
+- Keeps optional user interfaces separate from batch-safe libraries.
+- Ships ERT tests, warnings-as-errors compilation, linting, and GitHub Actions.
 
-* Usage
+* Package map
 
-** Read colors
+| Path                                         | Purpose | Optional dependency |
+|----------------------------------------------+---------+---------------------|
+| =ewal.el=                                    | Core palette loading and color API | none beyond Emacs |
+| =ewal-color-utils.el=                        | Color normalization, luminance, contrast, repair | none beyond Emacs |
+| =ewal-palette-utils.el=                      | Palette loading, saving, previews, and audits | none beyond Emacs |
+| =ewal-theme-contrast-check.el=               | Theme inspection, suggestions, overrides, reports | none beyond Emacs |
+| =ewal-palette-transient.el=                  | Palette browser interface | Transient |
+| =ewal-theme-contrast-panel.el=               | Contrast workflow interface | Transient |
+| =doom-themes/=                               | Doom adaptors and generated themes | doom-themes |
+| =spacemacs-themes/=                          | Spacemacs adaptors and themes | spacemacs-theme |
+| =evil-cursors/ewal-evil-cursors.el=          | Evil cursor and mode-line integration | Evil when used |
+| =uncustomized-faces.el=                      | Discover faces missing from a theme | none beyond Emacs |
+| =ewal-uncustomized-faces.el=                 | Apply palette-derived styles to discovered faces | core Ewal modules |
+
+* Installation
+
+** Source checkout
+
+Clone the maintained fork and place the required package directories on
+=load-path=:
+
+#+begin_src sh
+git clone https://github.com/fkr-0/ewal.git ~/src/ewal
+#+end_src
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path "~/src/ewal")
+(add-to-list 'load-path "~/src/ewal/doom-themes")
+(add-to-list 'load-path "~/src/ewal/spacemacs-themes")
+(add-to-list 'load-path "~/src/ewal/evil-cursors")
+(require 'ewal)
+#+end_src
+
+Only add the optional subdirectories that are actually used.
+
+** package-vc
+
+On Emacs versions with =package-vc-install=, the core package can be installed
+from the maintained repository:
+
+#+begin_src emacs-lisp
+(package-vc-install "https://github.com/fkr-0/ewal")
+(require 'ewal)
+#+end_src
+
+Optional integration packages remain separate package boundaries in the same
+repository. Their dependencies must be installed before loading them.
+
+** Existing package archives
+
+The upstream project has historically published =ewal=,
+=ewal-spacemacs-themes=, and =ewal-evil-cursors= as separate packages. Archive
+versions can therefore differ from this fork's current release. Use the source
+checkout when exact =v0.3.0= behavior is required.
+
+* Quick start
 
 #+begin_src emacs-lisp
 (require 'ewal)
 
-;; Load pywal's JSON when it exists, otherwise use the configured bundled
-;; palette.  Calling this explicitly is optional; `ewal-get-color' loads lazily.
+;; Loading is lazy, but an explicit load is useful when inspecting state.
 (ewal-load-colors)
+
+;; Retrieve semantic or ANSI-like roles.
+(ewal-get-color 'foreground)
+(ewal-get-color 'magenta)
 
 ;; Positive shades lighten; negative shades darken.
 (ewal-get-color 'magenta 4)
 (ewal-get-color 'background -2)
+#+end_src
+
+* Palette source precedence
+
+When =ewal-load-colors= is called, Ewal resolves palette sources in this order:
+
+1. An explicit JSON file passed to =ewal-load-colors=.
+2. =ewal-json-file=, which defaults to the traditional
+   =~/.cache/wal/colors.json=.
+3. The first existing file in =ewal-json-file-fallbacks=, which defaults to
+   =~/.cache/colrz/current/colors.json=.
+4. The configured bundled palette when no external file exists or
+   =ewal-use-built-in-always= is non-nil.
+
+This keeps pywal compatibility while making the fork work directly with colrz.
+The selected source is cached and reloaded when its identity or modification
+time changes. Pass a non-nil FORCE argument to reload unconditionally.
+
+#+begin_src emacs-lisp
+;; Add another compatible producer without replacing pywal precedence.
+(add-to-list 'ewal-json-file-fallbacks
+             "~/.cache/my-palette/colors.json" t)
+
+;; Force a refresh after changing source settings.
+(ewal-load-colors nil t)
 #+end_src
 
 ** Use bundled palettes
@@ -46,40 +153,37 @@ than of palette loading itself.
 (setq ewal-use-built-in-always t
       ewal-dark-palette-p t
       ewal-built-in-palette "sexy-material")
-
-;; Reload after changing palette settings.
 (ewal-load-colors nil t)
 #+end_src
 
-The default bundled-palette path is resolved relative to the installed =ewal=
-library.  It no longer assumes =~/.emacs.d/ewal/palettes/=.  To use a custom
-palette tree:
+Bundled palettes are resolved relative to the installed library. Ewal does not
+assume a particular =~/.emacs.d= layout.
+
+To use another palette tree:
 
 #+begin_src emacs-lisp
 (setq ewal-built-in-palette-path "~/path/to/palettes/")
 #+end_src
 
-To use a nonstandard pywal-compatible JSON file:
+* Contrast policy
+
+The loader normalizes colors and derives missing semantic roles before adaptors
+construct faces. Default thresholds are:
+
+- ordinary text, including comments: =4.5:1=
+- cursors, highlights, and non-text UI boundaries: =3.0:1=
 
 #+begin_src emacs-lisp
-(setq ewal-json-file "~/path/to/colors.json")
-(ewal-load-colors nil t)
+(setq ewal-color-minimum-text-contrast 4.5
+      ewal-color-minimum-ui-contrast 3.0)
 #+end_src
 
-** Contrast policy
+Contrast uses the WCAG sRGB linearization formula. Hexadecimal colors are
+parsed directly, so batch jobs and daemon startup do not depend on terminal
+color tables. When a color misses its target, Ewal first considers palette
+colors and then deterministic light/dark alternatives.
 
-The palette loader derives missing semantic roles and guarantees that they are
-not equal to the base background.  The defaults are:
-
-- ordinary text: =4.5:1=
-- cursors, comments, highlights, and UI boundaries: =3.0:1=
-
-These thresholds can be customized through
-=ewal-color-minimum-text-contrast= and =ewal-color-minimum-ui-contrast=.
-
-Contrast is calculated using the WCAG sRGB linearization formula.  Hexadecimal
-colors are parsed directly, so batch Emacs does not depend on the active
-terminal's color table.
+* Integrations
 
 ** Doom themes
 
@@ -91,17 +195,22 @@ terminal's color table.
       ewal-doom-themes-min-ui-contrast 3.0
       ewal-doom-themes-preview-limit 8)
 
-;; Generate a theme from a palette JSON file.
+;; Generate a Doom theme from a palette JSON file.
 (ewal-generate-doom-theme-interactive)
 
 ;; Audit the active Doom theme.
 (ewal-doom-themes-check-contrast)
 #+end_src
 
-The Doom adaptor enforces contrast while resolving semantic colors, and the
-generator normalizes supplied palettes before producing face definitions.  A
-palette that assigns the same color to foreground and background is repaired
-rather than emitted unchanged.
+Shipped theme entrypoints include:
+
+- =ewal-doom-one=
+- =ewal-doom-outrun-electric=
+- =ewal-doom-tokyo-night=
+- =ewal-doom-vibrant=
+
+The adaptor resolves semantic roles before theme construction and repairs
+foreground/background collisions instead of emitting them unchanged.
 
 ** Spacemacs themes
 
@@ -114,8 +223,9 @@ rather than emitted unchanged.
 (load-theme 'ewal-spacemacs-modern t)
 #+end_src
 
-The Spacemacs adaptor checks text and UI roles separately.  Background roles
-are not incorrectly audited against themselves.
+Available entrypoints are =ewal-spacemacs-classic= and
+=ewal-spacemacs-modern=. Text and UI roles are checked separately, and each role
+is compared with the background on which it is actually rendered.
 
 ** Evil cursors and mode-lines
 
@@ -129,10 +239,30 @@ are not incorrectly audited against themselves.
 (ewal-evil-cursors-get-colors :apply t :spacemacs t)
 #+end_src
 
-Cursor backgrounds are checked against the editor background, and text-bearing
-mode-line faces receive a foreground that meets the text contrast threshold.
+Cursor backgrounds are checked against the editor background. Text-bearing
+mode-line faces receive a foreground that meets the text threshold.
 
-** Audit palettes
+** Theme contrast inspection
+
+#+begin_src emacs-lisp
+(require 'ewal-theme-contrast-check)
+
+;; Report the current theme.
+(ewal-check-current-theme-contrast)
+
+;; Preview or apply palette-based suggestions.
+(setq ewal-contrast-suggestion-strategy 'palette)
+(ewal-contrast-preview-suggestions)
+
+;; Optional Transient workflow.
+(ewal-check-contrast-panel)
+#+end_src
+
+Applied suggestions can be retained as inspectable theme/face override data and
+exported as a =use-package= snippet. Ewal never edits user configuration files
+silently.
+
+** Palette audits
 
 Interactive report:
 
@@ -141,7 +271,7 @@ Interactive report:
 (ewal-audit-palettes-contrast "~/path/to/palettes" 4.5)
 #+end_src
 
-Pure batch report:
+Batch report:
 
 #+begin_src sh
 emacs --batch -Q -L /path/to/ewal \
@@ -149,18 +279,16 @@ emacs --batch -Q -L /path/to/ewal \
           (ewal-audit-palettes-contrast-batch \"/path/to/palettes\" 4.5))"
 #+end_src
 
-Optional Transient front ends are loaded only when requested:
+Optional palette browser:
 
 #+begin_src emacs-lisp
 (ewal-palettes-transient)
-(ewal-check-contrast-panel)
 #+end_src
 
-* Development with Eldev
+* Development
 
-The repository includes an =Eldev= project configuration.  It installs Doom,
-Spacemacs, Transient, and lint dependencies into an isolated development
-environment and keeps them separate from the user's Doom package tree.
+The repository uses [[https://github.com/emacs-eldev/eldev][Eldev]] to isolate development dependencies and to run the
+same checks locally and in CI.
 
 #+begin_src sh
 eldev test
@@ -168,26 +296,112 @@ eldev compile --warnings-as-errors
 eldev lint
 #+end_src
 
-The test suite covers WCAG reference values, headless hexadecimal parsing,
-semantic role repair, Doom and Spacemacs adaptor thresholds, Evil cursor
-contrast, and every bundled JSON palette.
+The consolidated release gate is also exposed through =bridge.yml= as =check=:
 
-This repository contains several MELPA package boundaries in one tree.  A
-single repository-wide =package-lint= invocation therefore misidentifies
-subpackage headers and dependencies relative to =ewal.el=.  The default Eldev
-lint command runs Checkdoc and Relint; run =package-lint= separately for each
-release package or from a CI matrix whose main file is the corresponding
-package entrypoint.
+#+begin_src sh
+eldev test && eldev compile --warnings-as-errors && eldev lint
+#+end_src
 
-Declarative Doom and Spacemacs theme entrypoints use =no-byte-compile: t=, as
-theme macros produce source forms that are not useful or reliable as ordinary
-byte-compiled libraries.  Reusable helper and adaptor libraries are compiled
-with warnings treated as errors.
+The test suite covers:
+
+- WCAG reference values and headless hexadecimal parsing
+- pywal-primary and colrz-fallback source resolution
+- semantic role derivation and contrast repair
+- all bundled JSON palettes
+- Doom and Spacemacs adaptor thresholds
+- Evil cursor and mode-line behavior
+- dynamic Doom theme generation
+- runtime loading and stable theme names
+- contrast reports, suggestions, overlays, and persistent overrides
+- release metadata, package dependency versions, and removed migration stubs
+
+Declarative theme entrypoints use =no-byte-compile: t= because their macros
+produce source forms that are not useful as ordinary byte-compiled libraries.
+Reusable libraries and adaptors compile with warnings treated as errors.
+
+The repository contains several package boundaries. A single repository-wide
+=package-lint= pass interprets every file relative to =ewal.el= and therefore
+reports misleading dependency errors for the optional packages. Checkdoc and
+Relint run repository-wide; package-lint belongs in a package-specific matrix,
+which is tracked in [[./ROADMAP.md][ROADMAP.md]].
+
+* Continuous integration
+
+[[./.github/workflows/ci.yml][GitHub Actions CI]] runs the following gate for Emacs 27.2, 29.4, and 30.2:
+
+1. ERT tests through Eldev.
+2. Byte compilation with warnings treated as errors.
+3. Checkdoc and Relint.
+
+The core still declares Emacs 25.1 compatibility. Reproducibly exercising that
+minimum on modern hosted infrastructure is retained as an explicit roadmap
+item rather than being implied by the current matrix.
+
+* Releases and versioning
+
+Repository releases follow Semantic Versioning and use annotated =vMAJOR.MINOR.PATCH=
+Git tags. The canonical version is recorded in [[./VERSION][VERSION]], mirrored by the
+=ewal.el= package header and =ewal-version=, and protected by ERT tests.
+
+Before tagging a release:
+
+1. Update =VERSION= and package headers.
+2. Move user-visible changes from =Unreleased= into a dated section in
+   [[./CHANGELOG.md][CHANGELOG.md]].
+3. Run the complete Eldev gate.
+4. Review the Git diff and release evidence.
+5. Create the annotated tag only after all mandatory checks pass.
+
+* Repository layout
+
+#+begin_example
+.
+├── ewal.el                         core API
+├── ewal-color-utils.el             color and contrast primitives
+├── ewal-palette-utils.el           palette tooling
+├── ewal-theme-contrast-check.el    contrast reports and fixes
+├── doom-themes/                    Doom adaptor and themes
+├── spacemacs-themes/               Spacemacs adaptor and themes
+├── evil-cursors/                   Evil cursor integration
+├── palettes/{dark,light}/          bundled JSON palettes
+├── tests/                          ERT suite
+├── .github/workflows/ci.yml        hosted quality matrix
+├── CHANGELOG.md                    release history
+├── ROADMAP.md                      planned direction
+└── VERSION                         canonical release version
+#+end_example
+
+Generated autoloads and byte-code are deliberately ignored. Package managers
+and Eldev regenerate them from maintained source files.
+
+* Fork lineage and contributions
+
+The Git remote convention is:
+
+- =origin=: maintained fork at =fkr-0/ewal=
+- =upstream=: original project at =cyruseuros/ewal=
+
+Changes should preserve compatibility where practical, keep optional dependencies
+outside the core, include focused tests, and document behavior that affects
+palette precedence, contrast policy, package boundaries, or public functions.
+
+See [[./ROADMAP.md][ROADMAP.md]] for planned work and [[./CHANGELOG.md][CHANGELOG.md]] for shipped changes.
 
 * Screenshots
 
 ** GUI
+
 [[./img/ewal.gif]]
 
 ** Terminal
+
 [[./img/ewal-terminal.png]]
+
+* License and credits
+
+Ewal is distributed under the GNU General Public License, version 3 or later.
+See [[./LICENSE][LICENSE]].
+
+The project builds on the original work by Uros Perisic, Grant Shangreaux,
+Henrik Lissner, upstream contributors, and the wider pywal, Doom Themes, and
+Spacemacs theme ecosystems.

@@ -1,0 +1,29 @@
+; -*- mode: emacs-lisp; lexical-binding: t -*-
+
+;; Ewal is a multi-package repository.  Use the core package header as the
+;; project descriptor, then add adaptor/UI dependencies only to development
+;; command sets.
+(setq eldev-project-main-file "ewal.el")
+
+(eldev-use-package-archive 'gnu-elpa)
+(eldev-use-package-archive 'nongnu-elpa)
+(eldev-use-package-archive 'melpa)
+
+(eldev-use-plugin 'autoloads)
+
+;; `package-lint' assumes one package descriptor per project.  Ewal is a
+;; monorepo containing core, Doom, Spacemacs, cursor, and optional UI packages,
+;; so run package-lint explicitly per package boundary instead of as a single
+;; default repository-wide pass.
+(add-to-list 'eldev-lint-default-excluded 'package)
+
+(eldev-add-loading-roots
+ 'test "." "tests" "doom-themes" "spacemacs-themes" "evil-cursors")
+(eldev-add-loading-roots
+ 'compile "." "doom-themes" "spacemacs-themes" "evil-cursors")
+(eldev-add-loading-roots
+ 'lint "." "doom-themes" "spacemacs-themes" "evil-cursors")
+
+(eldev-add-extra-dependencies
+ '(test compile lint) 'transient 'doom-themes 'spacemacs-theme)
+(eldev-add-extra-dependencies 'lint 'package-lint 'relint)

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Emacs ${{ matrix.emacs-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs-version:
+          - "27.2"
+          - "29.4"
+          - "30.2"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install Emacs
+        uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs-version }}
+
+      - name: Install Eldev
+        run: |
+          curl -fsSL https://raw.github.com/emacs-eldev/eldev/master/webinstall/eldev | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Run tests
+        run: eldev test
+
+      - name: Compile with warnings as errors
+        run: eldev compile --warnings-as-errors
+
+      - name: Run linters
+        run: eldev lint

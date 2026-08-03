@@ -1,0 +1,20 @@
+version: 1
+name: ewal
+description: Pywal-compatible Emacs theme toolkit with contrast-safe adaptors.
+commands:
+  test:
+    run: ["eldev", "test"]
+    description: Run the Ewal ERT suite through Eldev.
+    category: test
+  byte-compile:
+    run: ["eldev", "compile", "--warnings-as-errors"]
+    description: Byte-compile all maintained libraries with warnings as errors.
+    category: build
+  lint:
+    run: ["eldev", "lint"]
+    description: Run Checkdoc and Relint across maintained package files.
+    category: lint
+  check:
+    run: ["sh", "-c", "eldev test && eldev compile --warnings-as-errors && eldev lint"]
+    description: Run the complete local release quality gate.
+    category: custom

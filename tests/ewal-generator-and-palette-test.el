@@ -1,6 +1,7 @@
 ;;; ewal-generator-and-palette-test.el --- Tests for generator/palette tools -*- lexical-binding: t; -*-
 
 (require 'ert)
+(require 'cl-lib)
 (require 'ewal-palette-utils)
 
 ;; `doom-themes` is not available in the batch test environment.
@@ -37,5 +38,17 @@
             (should (string-suffix-p "bad.json" (alist-get 'file (car entries))))
             (should (string-suffix-p "good.json" (alist-get 'file (cadr entries))))))
       (delete-directory tmpdir t))))
+
+(ert-deftest ewal-palettes-transient-dispatches-interactively ()
+  "The optional palette wrapper should invoke the Transient command interactively."
+  (let (called)
+    (cl-letf (((symbol-function 'require)
+               (lambda (feature &optional _filename _noerror)
+                 (eq feature 'ewal-palette-transient)))
+              ((symbol-function 'call-interactively)
+               (lambda (command &rest _arguments)
+                 (setq called command))))
+      (ewal-palettes-transient))
+    (should (eq called 'ewal-palettes-menu))))
 
 ;;; ewal-generator-and-palette-test.el ends here

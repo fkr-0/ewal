@@ -85,4 +85,16 @@
       (ewal-contrast-cycle-strategy)
       (should (eq ewal-contrast-suggestion-strategy 'default)))))
 
+(ert-deftest ewal-contrast-panel-wrapper-dispatches-interactively ()
+  "The optional contrast wrapper should invoke its Transient command interactively."
+  (let (called)
+    (cl-letf (((symbol-function 'require)
+               (lambda (feature &optional _filename _noerror)
+                 (eq feature 'ewal-theme-contrast-panel)))
+              ((symbol-function 'call-interactively)
+               (lambda (command &rest _arguments)
+                 (setq called command))))
+      (ewal-check-contrast-panel))
+    (should (eq called 'ewal-theme-contrast-panel))))
+
 ;;; ewal-theme-contrast-check-test.el ends here

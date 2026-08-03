@@ -13,6 +13,8 @@
 (require 'ewal-color-utils)
 (require 'pp)
 
+(declare-function ewal-theme-contrast-panel "ewal-theme-contrast-panel" ())
+
 (defgroup ewal-contrast nil
   "Contrast checking and auto-fix helpers for themes."
   :group 'faces)
@@ -686,7 +688,7 @@ the message preview."
   (interactive)
   (unless (require 'ewal-theme-contrast-panel nil t)
     (user-error "The optional Transient contrast UI is unavailable"))
-  (ewal-theme-contrast-panel))
+  (call-interactively #'ewal-theme-contrast-panel))
 
 (defalias 'ewal-contrast-panel #'ewal-check-contrast-panel)
 

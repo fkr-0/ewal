@@ -9,7 +9,6 @@
 (require 'ewal-theme-contrast-check)
 (require 'transient)
 
-;;;###autoload
 (transient-define-prefix ewal-theme-contrast-panel ()
   "Inspect and repair theme contrast."
   [["Context"

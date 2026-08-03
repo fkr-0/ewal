@@ -9,7 +9,6 @@
 (require 'ewal-palette-utils)
 (require 'transient)
 
-;;;###autoload
 (transient-define-prefix ewal-palettes-menu ()
   "Browse and preview loaded Ewal palettes."
   ["Navigation"

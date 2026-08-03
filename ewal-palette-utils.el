@@ -12,7 +12,7 @@
 (require 'seq)
 (require 'subr-x)
 
-(declare-function ewal-palettes-menu "ewal-palette-transient")
+(declare-function ewal-palettes-menu "ewal-palette-transient" ())
 
 (defvar ewal-palettes nil
   "List of loaded palettes as (PALETTE . FILENAME) pairs.")
@@ -298,7 +298,7 @@ suggested replacement colors."
   (interactive)
   (unless (require 'ewal-palette-transient nil t)
     (user-error "The optional Transient palette UI is unavailable"))
-  (ewal-palettes-menu))
+  (call-interactively #'ewal-palettes-menu))
 
 (provide 'ewal-palette-utils)
 ;;; ewal-palette-utils.el ends here

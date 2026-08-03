@@ -61,4 +61,13 @@
   (dolist (path '("cc.el" "update-1.el" "update-2.el"))
     (should-not (file-exists-p (expand-file-name path ewal-release-test-root)))))
 
+(ert-deftest ewal-release-transient-prefixes-stay-behind-wrappers ()
+  "Transient prefix macros must not be expanded into generated autoload files."
+  (dolist (path '("ewal-palette-transient.el"
+                  "ewal-theme-contrast-panel.el"))
+    (should-not
+     (string-match-p
+      ";;;###autoload[\n\r]+(transient-define-prefix"
+      (ewal-release-test--read-file path)))))
+
 ;;; ewal-release-metadata-test.el ends here

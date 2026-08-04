@@ -89,7 +89,7 @@ The return value is a `def-doom-theme` form that you can `eval`."
           (fg-light   (alist-get :light-1 fg-shades))
           (fg-dark    (alist-get :dark-1 fg-shades))
           (comment (ewal-color-ensure-contrast
-                    fg-dark bg ewal-doom-themes-min-ui-contrast
+                    fg-dark bg ewal-doom-themes-min-contrast
                     (mapcar #'cdr palette)))
           (highlight (alist-get 'highlight palette))
           (highlight-fg (ewal-color-ensure-contrast

@@ -24,10 +24,10 @@ testing, documentation, and release work described in [[./CHANGELOG.md][CHANGELO
 
 | Item                    | Current value |
 |-------------------------+---------------|
-| Repository release      | =0.3.2=       |
-| Git tag                 | =v0.3.2=      |
+| Repository release      | =0.3.3=       |
+| Git tag                 | =v0.3.3=      |
 | Core Emacs requirement  | Emacs 25.1+   |
-| CI matrix               | 28.1, 29.4, 30.2 |
+| CI matrix               | 25.1 core; 28.1, 29.4, 30.2 full |
 | License                 | GPL-3.0-or-later |
 | Canonical version file  | [[./VERSION][VERSION]]       |
 
@@ -46,6 +46,7 @@ to version =1.1.0= while depending on core =ewal 0.3.0=.
 - Styles Evil cursors and optional state-aware mode-lines.
 - Audits complete palette directories in interactive or batch workflows.
 - Keeps optional user interfaces separate from batch-safe libraries.
+- Verifies the dependency-free core on exact Emacs 25.1.1.
 - Ships ERT tests, warnings-as-errors compilation, linting, and GitHub Actions.
 
 * Package map
@@ -87,23 +88,87 @@ Only add the optional subdirectories that are actually used.
 
 ** package-vc
 
-On Emacs versions with =package-vc-install=, the core package can be installed
-from the maintained repository:
+On Emacs 29 or newer, install the core package directly from the maintained
+repository. Pinning the release tag makes the result reproducible:
 
 #+begin_src emacs-lisp
-(package-vc-install "https://github.com/fkr-0/ewal")
+(package-vc-install
+ '(ewal :url "https://github.com/fkr-0/ewal.git"
+        :lisp-dir "."
+        :main-file "ewal.el")
+ "v0.3.3")
 (require 'ewal)
 #+end_src
 
-Optional integration packages remain separate package boundaries in the same
-repository. Their dependencies must be installed before loading them.
+Optional integration packages remain separate boundaries in the same
+repository. For example, install the Doom adaptor after =doom-themes=:
+
+#+begin_src emacs-lisp
+(package-vc-install
+ '(ewal-doom-themes
+   :url "https://github.com/fkr-0/ewal.git"
+   :lisp-dir "doom-themes"
+   :main-file "ewal-doom-themes.el")
+ "v0.3.3")
+#+end_src
+
+** straight.el
+
+The core recipe includes root libraries and bundled palettes:
+
+#+begin_src emacs-lisp
+(straight-use-package
+ '(ewal :type git
+        :host github
+        :repo "fkr-0/ewal"
+        :files ("*.el" "palettes")))
+#+end_src
+
+Install an optional boundary separately so its own package metadata and
+dependencies remain visible:
+
+#+begin_src emacs-lisp
+(straight-use-package
+ '(ewal-doom-themes :type git
+                    :host github
+                    :repo "fkr-0/ewal"
+                    :local-repo "ewal-doom-themes"
+                    :files ("doom-themes/*.el")))
+#+end_src
+
+** Doom Emacs
+
+Add the core and Doom adaptor recipes to =~/.config/doom/packages.el=:
+
+#+begin_src emacs-lisp
+(package! ewal
+  :recipe (:host github
+           :repo "fkr-0/ewal"
+           :files ("*.el" "palettes")))
+
+(package! ewal-doom-themes
+  :recipe (:host github
+           :repo "fkr-0/ewal"
+           :files ("doom-themes/*.el")))
+#+end_src
+
+Run =doom sync=, then configure the packages in =config.el=:
+
+#+begin_src emacs-lisp
+(use-package! ewal
+  :config
+  (ewal-load-colors))
+
+(use-package! ewal-doom-themes
+  :after doom-themes)
+#+end_src
 
 ** Existing package archives
 
 The upstream project has historically published =ewal=,
 =ewal-spacemacs-themes=, and =ewal-evil-cursors= as separate packages. Archive
 versions can therefore differ from this fork's current release. Use the source
-checkout when exact =v0.3.2= behavior is required.
+checkout when exact =v0.3.3= behavior is required.
 
 * Quick start
 
@@ -307,6 +372,7 @@ The repository uses [[https://github.com/emacs-eldev/eldev][Eldev]] to isolate d
 same checks locally and in CI.
 
 #+begin_src sh
+sh scripts/core-compat.sh
 eldev test
 eldev compile --warnings-as-errors
 eldev lint
@@ -317,7 +383,8 @@ sh scripts/package-smoke.sh
 The consolidated release gate is also exposed through =bridge.yml= as =check=:
 
 #+begin_src sh
-eldev test && eldev compile --warnings-as-errors && eldev lint && \
+sh scripts/core-compat.sh && \
+  eldev test && eldev compile --warnings-as-errors && eldev lint && \
   eldev exec --dont-require --file scripts/package-lint.el && \
   sh scripts/package-smoke.sh
 #+end_src
@@ -331,6 +398,7 @@ The test suite covers:
 - Doom and Spacemacs adaptor thresholds
 - Evil cursor and mode-line behavior
 - dynamic Doom theme generation
+- generated Doom face contrast across all 256 bundled palettes
 - runtime loading and stable theme names
 - contrast reports, suggestions, overlays, and persistent overrides
 - release metadata, package dependency versions, and removed migration stubs
@@ -340,15 +408,18 @@ Declarative theme entrypoints use =no-byte-compile: t= because their macros
 produce source forms that are not useful as ordinary byte-compiled libraries.
 Reusable libraries and adaptors compile with warnings treated as errors.
 
-The repository contains several package boundaries. A single repository-wide
-=package-lint= pass interprets every file relative to =ewal.el= and therefore
-reports misleading dependency errors for the optional packages. Checkdoc and
-Relint run repository-wide; package-lint belongs in a package-specific matrix,
-which is tracked in [[./ROADMAP.md][ROADMAP.md]].
+The repository contains several package boundaries. Checkdoc and Relint run
+repository-wide, while package-lint runs independently against the core, Doom,
+Spacemacs, and Evil package entrypoints so each dependency contract is checked
+in its correct context.
 
 * Continuous integration
 
-[[./.github/workflows/ci.yml][GitHub Actions CI]] runs the following gate for Emacs 28.1, 29.4, and 30.2:
+[[./.github/workflows/ci.yml][GitHub Actions CI]] first runs a dependency-free core gate on exact Emacs 25.1.1.
+It compiles six core libraries with warnings treated as errors and runs the
+core-only ERT subset inside a digest-pinned container with networking disabled.
+
+The full integration gate then runs on Emacs 28.1, 29.4, and 30.2:
 
 1. ERT tests through Eldev.
 2. Byte compilation with warnings treated as errors.
@@ -356,10 +427,9 @@ which is tracked in [[./ROADMAP.md][ROADMAP.md]].
 4. Independent package-lint checks for every published package entrypoint.
 5. Package tarball construction and installed built-in-palette smoke testing.
 
-The core still declares Emacs 25.1 compatibility. The hosted integration matrix
-starts at 28.1 because the current Transient development dependency requires
-Emacs 28.1. Reproducibly exercising the core minimum without optional package
-constraints remains an explicit roadmap item.
+The full matrix starts at 28.1 because the current Transient development
+dependency requires Emacs 28.1. The separate 25.1 gate verifies the declared
+core floor without importing optional modern package constraints.
 
 * Releases and versioning
 
@@ -389,6 +459,7 @@ Before tagging a release:
 ├── evil-cursors/                   Evil cursor integration
 ├── palettes/{dark,light}/          bundled JSON palettes
 ├── tests/                          ERT suite
+├── scripts/core-compat.{sh,el}     Emacs 25.1 source-only gate
 ├── .github/workflows/ci.yml        hosted quality matrix
 ├── CHANGELOG.md                    release history
 ├── ROADMAP.md                      planned direction

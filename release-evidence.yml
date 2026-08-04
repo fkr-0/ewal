@@ -1,26 +1,26 @@
 schema_version: 1
-generated_at: "2026-08-04T01:13:40+02:00"
-last_verified_at: "2026-08-04T01:17:29+02:00"
+generated_at: "2026-08-04T14:53:06+02:00"
+last_verified_at: "2026-08-04T14:59:28+02:00"
 release:
   project: ewal
-  version: 0.3.2
-  tag: v0.3.2
+  version: 0.3.3
+  tag: v0.3.3
   tag_policy: annotated
   branch: master
   release_unit: repository
   canonical_version_file: VERSION
-  source_head_before_release_commit: fdd6de09b00d222ba929aa7e746e86592a35b1d8
-  base_tag: v0.3.1
-  base_tag_commit: fdd6de09b00d222ba929aa7e746e86592a35b1d8
+  source_head_before_release_commit: 96d533a25c687d3e9d8f1e61640c34ff1751fbca
+  base_tag: v0.3.2
+  base_tag_commit: 96d533a25c687d3e9d8f1e61640c34ff1751fbca
   target: release commit containing this evidence file
-  state_during_generation: pending_commit_tag_push_and_hosted_ci
+  state_during_generation: pending_commit_push_hosted_ci_tag_and_asset
   expected_final_state: committed_tagged_pushed_ci_verified_and_release_asset_published
 
 version_contract:
-  repository_version: 0.3.2
-  core_package_version: 0.3.2
-  doom_adaptor_version: 0.3.2
-  spacemacs_adaptor_version: 0.3.2
+  repository_version: 0.3.3
+  core_package_version: 0.3.3
+  doom_adaptor_version: 0.3.3
+  spacemacs_adaptor_version: 0.3.3
   evil_cursors_package_version: 1.1.0
   adaptor_core_dependency_floor: 0.3.0
   tag_format: vMAJOR.MINOR.PATCH
@@ -30,39 +30,75 @@ version_contract:
 scope:
   release_type: patch
   rationale: >-
-    The work hardens existing palette loading, package metadata, CI, and
-    distributable artifacts without adding a new provider API or breaking
-    public behavior.
+    The release enforces an already declared compatibility floor, repairs an
+    existing generated-theme contrast defect, expands regression coverage, and
+    documents supported installation workflows without adding a new provider
+    API or changing existing public call signatures.
   delivered:
-    - validate external pywal-compatible cache structure before activation
-    - retry reads when cache files are rewritten or replaced mid-read
-    - detect timestamp-preserving replacements through extended file identity
-    - fall back to bundled palettes for malformed or incomplete external input
-    - lint every published package boundary independently
-    - pin GitHub Actions to immutable revisions
-    - package and smoke-test bundled palette resources
+    - exact Emacs 25.1.1 dependency-free core compilation and test gate
+    - immutable digest-pinned compatibility container
+    - clean source-only staging that excludes incompatible modern bytecode
+    - generated Doom validation across all bundled palettes
+    - ordinary-text contrast enforcement for generated comment faces
+    - package-vc, straight.el, and Doom Emacs installation recipes
 
-cache_contract:
-  required_sections:
-    - special
-    - colors
-  required_roles:
-    - background
-    - foreground
-  required_ansi_entries: 1
-  optional_roles:
+core_compatibility_contract:
+  declared_minimum: "25.1"
+  verified_runtime: "GNU Emacs 25.1.1"
+  image: silex/emacs
+  image_digest: sha256:360944881ba217966447d3e5f9c9b4521d656db74c7dc885e869d35a7e92e120
+  image_acquisition: pull only when the pinned digest is absent locally
+  network_during_execution: disabled
+  source_staging:
+    mode: clean temporary source tree
+    excluded:
+      - .git
+      - .eldev
+      - .ws-bridge
+      - dist
+      - "*.elc"
+  compiled_with_warnings_as_errors:
+    - ewal-color-utils.el
+    - ewal.el
+    - ewal-palette-utils.el
+    - ewal-theme-contrast-check.el
+    - uncustomized-faces.el
+    - ewal-uncustomized-faces.el
+  test_files:
+    - tests/ewal-color-utils-test.el
+    - tests/ewal-theme-contrast-check-test.el
+    - tests/ewal-release-metadata-test.el
+  tests: 29
+  unexpected_tests: 0
+
+generated_theme_contract:
+  bundled_palettes: 256
+  representative_faces: 13
+  representative_face_set:
+    - default
     - cursor
-  default_read_retries: 2
-  source_signature_fields:
-    - modification_time
-    - status_change_time
-    - size
-    - inode
-    - device
-  failure_behavior: log the external error and load the configured built-in palette
+    - region
+    - highlight
+    - error
+    - warning
+    - success
+    - font-lock-comment-face
+    - font-lock-function-name-face
+    - font-lock-keyword-face
+    - font-lock-string-face
+    - font-lock-variable-name-face
+    - font-lock-type-face
+  combinations_checked: 3328
+  text_threshold: 4.5
+  cursor_threshold: 3.0
+  pre_fix_findings:
+    total: 57
+    affected_face: font-lock-comment-face
+    cause: generated comments used the UI contrast threshold
+  post_fix_findings: 0
 
 repository_inventory:
-  tracked_files_before_release_commit: 295
+  candidate_files: 299
   bundled_palette_json_files: 256
   ert_test_files: 8
   published_package_entrypoints:
@@ -77,23 +113,28 @@ verification_environment:
   eldev: 1.11.1
   git: 2.55.0
   gh: 2.53.0
+  docker_server: 29.6.2
 
 verification:
   baseline_release:
-    version: 0.3.1
-    commit: fdd6de09b00d222ba929aa7e746e86592a35b1d8
-    hosted_ci_run: 30852559070
+    version: 0.3.2
+    commit: 96d533a25c687d3e9d8f1e61640c34ff1751fbca
+    hosted_ci_run: 30861792840
     hosted_ci_result: success
-    hosted_ci_url: https://github.com/fkr-0/ewal/actions/runs/30852559070
+    hosted_ci_url: https://github.com/fkr-0/ewal/actions/runs/30861792840
   local_release_gate:
     command: >-
-      eldev test && eldev compile --warnings-as-errors && eldev lint &&
+      sh scripts/core-compat.sh &&
+      eldev test &&
+      eldev compile --warnings-as-errors &&
+      eldev lint &&
       eldev exec --dont-require --file scripts/package-lint.el &&
       sh scripts/package-smoke.sh
     bridge_command: check
     result: passed
-    duration_ms: 4259
-    tests: 44
+    duration_ms: 18310
+    core_emacs_25_1_tests: 29
+    full_integration_tests: 46
     unexpected_tests: 0
     compile_warnings: 0
     checkdoc_warnings: 0
@@ -101,12 +142,12 @@ verification:
     package_lint_errors: 0
     package_smoke_result: passed
   regression_coverage:
-    - minimal structurally valid partial palette
-    - malformed JSON fallback
-    - incomplete palette fallback
-    - cache replacement during read
-    - atomic replacement with preserved modification time
-    - immutable GitHub Action revisions
+    - exact Emacs 25.1 source compilation
+    - core-only ERT execution under Emacs 25.1.1
+    - immutable container and CI action references
+    - all 256 bundled palettes finalized safely
+    - all 256 bundled palettes generate 13 readable Doom faces
+    - package artifact contains and loads bundled palettes
     - release and adaptor version consistency
   structural_checks:
     - command: git diff --check
@@ -115,14 +156,21 @@ verification:
       result: passed
     - command: parse README.org with org-element
       result: passed
-    - command: run sh -n and ShellCheck on scripts/package-smoke.sh
+    - command: run sh -n and ShellCheck on release shell scripts
       result: passed
     - command: scan additions for credentials and unintended absolute paths
       result: passed
 
 ci:
   workflow: .github/workflows/ci.yml
-  matrix:
+  core_minimum_job:
+    emacs: "25.1.1"
+    execution: digest-pinned Docker container
+    required_steps:
+      - source-only staging
+      - warnings-as-errors compilation of six core libraries
+      - 29 core-only ERT tests
+  full_matrix:
     - "28.1"
     - "29.4"
     - "30.2"
@@ -133,7 +181,7 @@ ci:
     purcell_setup_emacs:
       revision: bdc64dc730ae1fcba200bfd52cb1b4cf6159cbe5
       documented_version: v8.0
-  required_steps:
+  full_matrix_required_steps:
     - ERT tests through Eldev
     - byte compilation with warnings as errors
     - Checkdoc and Relint
@@ -142,10 +190,10 @@ ci:
   hosted_result_during_generation: pending_release_commit
 
 package_artifact:
-  source_path_during_generation: /tmp/ewal-release-v0.3.2/ewal-0.3.2.tar
-  published_name: ewal-0.3.2.tar
+  source_path_during_generation: /tmp/ewal-release-v0.3.3/ewal-0.3.3.tar
+  published_name: ewal-0.3.3.tar
   size_bytes: 491520
-  sha256: 400f893133d55924e3df7a3c3eaf37d6cf865f3f4d4eeefb7fa1d9adbf18a6d3
+  sha256: 85fb7353e57d6a7516270dbdbbb72f2172ef08c3f0a218da6c0c41798d3a10a0
   tar_entries: 278
   palette_entries: 256
   includes:
@@ -155,25 +203,28 @@ package_artifact:
     - CHANGELOG.md
   smoke_test:
     extracted_load: passed
-    loaded_version: 0.3.2
+    loaded_version: 0.3.3
     foreground: "#eceff1"
   publication_state_during_generation: pending_github_release_asset
 
 independent_review:
   backend: OpenCode
-  task_id: 3f3716ab-8739-46a4-ba99-e058cbd9e566
+  task_id: dde74732-e53d-4213-9406-4993a473ae44
+  status_during_generation: failed
   result: unavailable
-  reason: review task exceeded the 120000 ms backend limit and returned no findings
+  reason: task exceeded the 600000 ms backend limit and returned no findings
   treated_as_release_evidence: false
 
 known_limitations:
   - >-
-    The core declares Emacs 25.1 compatibility, while the full hosted matrix
-    begins at 28.1 because the current Transient development dependency requires
-    Emacs 28.1.
+    Optional Transient integration requires Emacs 28.1 through the current
+    development dependency, so it remains outside the Emacs 25.1 core gate.
   - >-
     The historical package name ewal-spacemacs-themes triggers a nonfatal
     package-lint naming warning; package-lint errors remain release-blocking.
+  - >-
+    The compatibility container is amd64 Linux; the full hosted matrix remains
+    responsible for current Linux integration behavior.
   - >-
     Package tar metadata is not claimed to be byte-for-byte reproducible across
     separate builds; the published release asset is identified by its recorded
@@ -182,9 +233,9 @@ known_limitations:
 publication:
   operator_authorized: true
   requested_operations:
-    - commit the v0.3.2 release
+    - commit the v0.3.3 release
     - push master
-    - create and push annotated tag v0.3.2
     - require hosted CI success for the exact release commit
+    - create and push annotated tag v0.3.3
     - publish the validated package tarball as a GitHub release asset
   state_during_generation: not_yet_executed

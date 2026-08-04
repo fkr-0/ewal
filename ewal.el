@@ -7,7 +7,7 @@
 ;; Author: Uros Perisic
 ;; URL: https://github.com/fkr-0/ewal
 ;;
-;; Version: 0.3.2
+;; Version: 0.3.3
 ;; Keywords: faces
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -41,7 +41,7 @@
   "Customizations for ewal theme generator."
   :group 'faces)
 
-(defconst ewal-version "0.3.2"
+(defconst ewal-version "0.3.3"
   "Current Ewal release version.")
 
 (defcustom ewal-json-file "~/.cache/wal/colors.json"

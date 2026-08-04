@@ -1,6 +1,6 @@
 ;;; ewal-doom-themes.el --- Doom theme helpers for ewal -*- lexical-binding: t; -*-
 
-;; Version: 0.3.2
+;; Version: 0.3.3
 ;; Package-Requires: ((emacs "25") (ewal "0.3.0") (doom-themes "2.3.0"))
 ;; URL: https://github.com/fkr-0/ewal
 

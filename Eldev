@@ -20,7 +20,9 @@
 ;; Repository tooling is executed explicitly and is not a distributable
 ;; package library.
 (setq eldev-standard-excludes
-      `(:or ,eldev-standard-excludes "./scripts/package-lint.el"))
+      `(:or ,eldev-standard-excludes
+            "./scripts/package-lint.el"
+            "./scripts/core-compat.el"))
 
 ;; The core runtime resolves bundled palettes relative to the installed
 ;; library.  Include those resources and the user-facing release documents in

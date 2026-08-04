@@ -2,6 +2,10 @@ version: 1
 name: ewal
 description: Pywal-compatible Emacs theme toolkit with contrast-safe adaptors.
 commands:
+  core-compat:
+    run: ["sh", "scripts/core-compat.sh"]
+    description: Compile and test the dependency-free core on pinned Emacs 25.1.
+    category: test
   test:
     run: ["eldev", "test"]
     description: Run the Ewal ERT suite through Eldev.
@@ -23,6 +27,6 @@ commands:
     description: Build and smoke-test the installable package tarball.
     category: build
   check:
-    run: ["sh", "-c", "eldev test && eldev compile --warnings-as-errors && eldev lint && eldev exec --dont-require --file scripts/package-lint.el && sh scripts/package-smoke.sh"]
+    run: ["sh", "-c", "sh scripts/core-compat.sh && eldev test && eldev compile --warnings-as-errors && eldev lint && eldev exec --dont-require --file scripts/package-lint.el && sh scripts/package-smoke.sh"]
     description: Run the complete local release quality gate.
     category: custom

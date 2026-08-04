@@ -15,13 +15,13 @@ ship only with headless tests and reproducible contrast evidence.
   matrix.
 - Stable cache-file reads with malformed-input fallback and replacement retry.
 - Package-boundary linting and immutable GitHub Action revisions.
+- Reproducible dependency-free core verification on exact Emacs 25.1.1.
+- Generated Doom theme validation across every bundled palette and a stable
+  representative face set.
+- Documented package-vc, straight.el, and Doom Emacs installation paths.
 
-## 0.3.x — hardening and packaging
-
-- Exercise the declared Emacs 25.1 floor in a reproducible container, while
-  retaining the full-integration 28/29/30 hosted matrix.
-- Validate every generated theme against a stable set of representative faces.
-- Document installation recipes for package-vc, straight.el, and Doom Emacs.
+The 0.3.x hardening and packaging milestone is complete. New feature work now
+targets the provider and live-update architecture below.
 
 ## 0.4.0 — palette providers and live updates
 

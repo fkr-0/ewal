@@ -15,6 +15,17 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  core-minimum:
+    name: Core Emacs 25.1
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+
+      - name: Compile and test dependency-free core
+        run: sh scripts/core-compat.sh
+
   quality:
     name: Emacs ${{ matrix.emacs-version }}
     runs-on: ubuntu-latest

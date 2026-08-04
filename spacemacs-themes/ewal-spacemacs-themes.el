@@ -1,6 +1,6 @@
 ;;; ewal-spacemacs-themes.el --- Ride the rainbow spaceship -*- lexical-binding: t; -*-
 
-;; Version: 0.3.2
+;; Version: 0.3.3
 ;; Package-Requires: ((emacs "25.1") (ewal "0.3.0") (spacemacs-theme "0.2.0"))
 ;; URL: https://github.com/fkr-0/ewal
 

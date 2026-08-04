@@ -6,6 +6,31 @@ uses [Semantic Versioning](https://semver.org/) and follows the structure of
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-08-04
+
+### Added
+
+- A reproducible dependency-free core gate on exact Emacs 25.1.1, using an
+  immutable container digest, warnings-as-errors compilation, and core-only
+  regression tests with networking disabled during execution.
+- Generated Doom theme validation across all 256 bundled palettes and 13
+  representative text and UI faces.
+- Installation recipes for `package-vc`, `straight.el`, and Doom Emacs,
+  including separate optional package boundaries.
+
+### Changed
+
+- The complete local release gate now starts with the Emacs 25.1 compatibility
+  check before the full Emacs 28/29/30 integration suite.
+- The compatibility runner stages a clean source-only tree so modern `.elc`
+  files cannot contaminate old-version verification.
+
+### Fixed
+
+- Dynamically generated Doom theme comments now use the ordinary text contrast
+  threshold instead of the weaker UI threshold. The expanded matrix identified
+  and repaired comment contrast failures in 57 bundled palettes.
+
 ## [0.3.2] - 2026-08-04
 
 ### Added
@@ -120,7 +145,8 @@ uses [Semantic Versioning](https://semver.org/) and follows the structure of
 
 - Initial tagged release of the pywal-driven Emacs theme packages.
 
-[Unreleased]: https://github.com/fkr-0/ewal/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/fkr-0/ewal/compare/v0.3.3...HEAD
+[0.3.3]: https://github.com/fkr-0/ewal/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/fkr-0/ewal/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/fkr-0/ewal/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/fkr-0/ewal/releases/tag/v0.3.0

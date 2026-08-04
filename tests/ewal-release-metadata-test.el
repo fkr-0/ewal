@@ -68,21 +68,39 @@
   (dolist (path '("README.org" "CHANGELOG.md" "ROADMAP.md"
                   "release-evidence.yml" ".github/workflows/ci.yml"
                   "bridge.yml" "scripts/package-lint.el"
-                  "scripts/package-smoke.sh"))
+                  "scripts/package-smoke.sh" "scripts/core-compat.el"
+                  "scripts/core-compat.sh"))
     (should (file-readable-p (expand-file-name path ewal-release-test-root)))))
 
 (ert-deftest ewal-release-ci-actions-use-immutable-revisions ()
   "GitHub Actions must be pinned to full immutable commit hashes."
   (let ((workflow (ewal-release-test--read-file ".github/workflows/ci.yml"))
         (position 0)
-        (pinned-count 0))
+        (pinned-count 0)
+        (uses-count 0))
     (should-not
      (string-match-p "uses: [^\n]+@\\(?:master\\|main\\|v[0-9]+\\)\\s-*$"
                      workflow))
     (while (string-match "uses: [^\n]+@[0-9a-f]\\{40\\}" workflow position)
       (setq pinned-count (1+ pinned-count)
             position (match-end 0)))
-    (should (= 2 pinned-count))))
+    (setq position 0)
+    (while (string-match "uses: [^\n]+" workflow position)
+      (setq uses-count (1+ uses-count)
+            position (match-end 0)))
+    (should (>= uses-count 2))
+    (should (= uses-count pinned-count))))
+
+(ert-deftest ewal-release-core-floor-is-reproducible-and-immutable ()
+  "The Emacs 25.1 core gate must use a digest-pinned container image."
+  (let ((script (ewal-release-test--read-file "scripts/core-compat.sh"))
+        (workflow (ewal-release-test--read-file ".github/workflows/ci.yml")))
+    (should
+     (string-match-p
+      "silex/emacs@sha256:[0-9a-f]\\{64\\}"
+      script))
+    (should (string-match-p "Core Emacs 25\\.1" workflow))
+    (should (string-match-p "sh scripts/core-compat\\.sh" workflow))))
 
 (ert-deftest ewal-release-obsolete-migration-copies-stay-removed ()
   "Superseded local migration files must not return to the package tree."
